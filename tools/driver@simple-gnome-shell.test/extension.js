@@ -1,5 +1,6 @@
 // Drives Simple GNOME Shell in the headless shell started by tools/run-headless.sh. Reports through "[drv] ..." log
 // lines and PNGs in $SGS_OUT, then terminates the shell.
+import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Shell from 'gi://Shell';
@@ -270,6 +271,44 @@ const STEPS = {
             s.reset(key);
         await wait(500);
         say(`reset: panel style "${Main.panel.get_style()}" panelBox ${Main.layoutManager.panelBox.height}`);
+    },
+    // The undo buttons, with values off their defaults. SGS_CLICKS is "x,y;x,y": where to click in the window.
+    async prefsReset() {
+        const s = schemaSettings(UUID, 'org.gnome.shell.extensions.simple-gnome-shell');
+        s.set_string('color', '#7a1f3d');
+        s.set_string('top-bar-style', 'pill');
+        s.set_int('top-bar-height', 40);
+        s.set_double('dock-flare', 30);
+        s.set_boolean('osd-grow', false);
+        const proc = Gio.Subprocess.new(['gnome-extensions', 'prefs', UUID], Gio.SubprocessFlags.NONE);
+        await wait(4000);
+        const win = global.get_window_actors().map(a => a.meta_window).find(w => w.get_title() === 'Simple GNOME Shell');
+        win.move_resize_frame(true, 100, 60, 760, 2300);
+        await wait(1200);
+        await shot('40-prefs-changed');
+        const state = () => ['color', 'top-bar-style', 'top-bar-height', 'dock-flare', 'osd-grow']
+            .map(k => `${k}=${s.get_value(k).print(false)}`).join(' ');
+        say(`before clicks: ${state()}`);
+        const seat = Clutter.get_default_backend().get_default_seat();
+        const pointer = seat.create_virtual_device(Clutter.InputDeviceType.POINTER_DEVICE);
+        for (const spot of (GLib.getenv('SGS_CLICKS') ?? '').split(';').filter(Boolean)) {
+            const [x, y] = spot.split(',').map(Number);
+            const now = () => GLib.get_monotonic_time();
+            pointer.notify_absolute_motion(now(), x, y);
+            await wait(250);
+            pointer.notify_button(now(), Clutter.BUTTON_PRIMARY, Clutter.ButtonState.PRESSED);
+            await wait(60);
+            pointer.notify_button(now(), Clutter.BUTTON_PRIMARY, Clutter.ButtonState.RELEASED);
+            await wait(500);
+            say(`clicked ${spot}: ${state()}`);
+        }
+        await wait(600);
+        await shot('41-prefs-after');
+        win.delete(global.get_current_time());
+        await wait(800);
+        proc.force_exit();
+        for (const k of ['color', 'top-bar-style', 'top-bar-height', 'dock-flare', 'osd-grow'])
+            s.reset(k);
     },
     async lifecycle() {
         const before = shapes().length;
