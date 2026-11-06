@@ -34,30 +34,46 @@
       <default>8</default>
       <summary>Room beside the outermost buttons (px)</summary>
     </key>
+    <key name="top-bar-height" type="i">
+      <range min="0" max="100"/>
+      <default>0</default>
+      <summary>Height (px)</summary>
+      <description>0 keeps the theme's height.</description>
+    </key>
     <key name="top-bar-radius" type="d">
       <range min="0.0" max="64.0"/>
       <default>22.0</default>
-      <summary>Corner radius (px)</summary>
+      <summary>Radius of the outward-rounded corners (px)</summary>
     </key>
     <key name="top-bar-flare" type="d">
       <range min="0.0" max="64.0"/>
       <default>12.0</default>
-      <summary>Edge flare radius (px)</summary>
+      <summary>Radius of the inward-curved flares at the screen edge (px)</summary>
     </key>
 
     <key name="dock-enabled" type="b">
       <default>true</default>
       <summary>Dash to Dock grows out of the screen edge</summary>
     </key>
+    <key name="dock-space-edge" type="i">
+      <range min="0" max="40"/>
+      <default>6</default>
+      <summary>Space between the apps and the screen edge (px)</summary>
+    </key>
+    <key name="dock-space-far" type="i">
+      <range min="0" max="40"/>
+      <default>6</default>
+      <summary>Space on the apps' other side (px)</summary>
+    </key>
     <key name="dock-radius" type="d">
       <range min="0.0" max="64.0"/>
       <default>22.0</default>
-      <summary>Corner radius (px)</summary>
+      <summary>Radius of the outward-rounded corners (px)</summary>
     </key>
     <key name="dock-flare" type="d">
       <range min="0.0" max="64.0"/>
       <default>16.0</default>
-      <summary>Edge flare radius (px)</summary>
+      <summary>Radius of the inward-curved flares at the screen edge (px)</summary>
     </key>
 
     <key name="menus-grow" type="b">

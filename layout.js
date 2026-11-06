@@ -44,6 +44,17 @@ function frameOf(side, W, H) {
 
 const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
 
+/**
+ * The corner and the flare of a side as long as `room`, whole px. Each takes a stretch of that side, so together they
+ * fit in it, in proportion, or the two curves would run into each other and leave a notch.
+ */
+function fitCurves(corner, flare, room) {
+    const total = corner + flare;
+    const k = total > room ? Math.max(room, 0) / total : 1;
+    const fittedCorner = Math.round(corner * k);
+    return [fittedCorner, Math.min(Math.round(flare * k), Math.max(Math.floor(room) - fittedCorner, 0))];
+}
+
 /** The side of a monitor of size W x H that the rect [x, y, w, h], local to it, is closest to. */
 export function nearestSide([x, y, w, h], W, H) {
     const cx = x + w / 2, cy = y + h / 2;
@@ -127,7 +138,8 @@ export function composeShape({side, monitorW, monitorH, body, radius, flare, fil
         if (gx1 - gx0 < 1 || my1 <= my0)
             continue;
         const reach = my1 - thick;
-        const f = clamp(fillet, 0, Math.max(reach, 0));
+        const width = gx1 - gx0;
+        const [menuCorner, f] = fitCurves(Math.min(menuRadius, width / 2), fillet, reach);
         const room = Math.max(radius + f, 1);
         // How much of the corner and the fillet fit between the menu's side and the body's end, 0 to 1.
         const fitLeft = clamp((gx0 - x0) / room, 0, 1), fitRight = clamp((x1 - gx1) / room, 0, 1);
@@ -137,16 +149,14 @@ export function composeShape({side, monitorW, monitorH, body, radius, flare, fil
         right = Math.max(right, gx1);
         menus.push({
             gx0, gx1, y0: Math.min(my0, thick - 1), y1: my1, reach,
-            radius: clamp(menuRadius, 0, Math.min((gx1 - gx0) / 2, Math.max(reach, 0))),
+            radius: menuCorner,
             filletLeft: f * fitLeft, filletRight: f * fitRight,
         });
     }
 
-    // The far corners cannot be larger than what shows of the body, which shrinks as a bar slides out.
-    const w = right - left;
-    const rMax = Math.min(thick, w / 2);
-    const f = clamp(flare, 0, thick);
-    addRect(left, 0, right, thick, 0, [clamp(rRight, 0, rMax), clamp(rLeft, 0, rMax)]);
+    // What shows of the body shrinks as a bar slides out, and the curves with it.
+    const [corner, f] = fitCurves(Math.min(radius, (right - left) / 2), flare, thick);
+    addRect(left, 0, right, thick, 0, [Math.min(rRight, corner), Math.min(rLeft, corner)]);
     addFillet(left, 0, -1, Math.min(f, left));
     addFillet(right, 0, 1, Math.min(f, frame.length - right));
     for (const menu of menus) {

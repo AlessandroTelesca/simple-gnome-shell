@@ -1,4 +1,6 @@
+import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
@@ -8,6 +10,10 @@ import {pinToEdge} from './layout.js';
 
 const TRANSPARENT = 'simple-gnome-shell-transparent';
 const SIDES = ['top', 'bottom', 'left', 'right'];
+const OPPOSITE = {top: 'bottom', bottom: 'top', left: 'right', right: 'left'};
+const SPACE_KEYS = ['dock-enabled', 'dock-space-edge', 'dock-space-far'];
+// The padding the theme gives a dock icon.
+const ICON_ROOM = 6;
 // Dash to Dock can rebuild a dock's actors a little after adding its container.
 const RESCAN_MS = 1000;
 
@@ -20,6 +26,74 @@ function findDash(actor) {
             return found;
     }
     return null;
+}
+
+/**
+ * The room around the dock's apps, which Dash to Dock sets in its stylesheet. St has no variables, and it takes a
+ * stylesheet to reach icons Dash to Dock builds later, so one is generated from the settings.
+ */
+class DockSpacing {
+    constructor(settings) {
+        this._settings = settings;
+        const dir = GLib.build_filenamev([GLib.get_user_cache_dir(), 'simple-gnome-shell']);
+        GLib.mkdir_with_parents(dir, 0o755);
+        this._file = Gio.File.new_for_path(GLib.build_filenamev([dir, 'dock-spacing.css']));
+        this._context = St.ThemeContext.get_for_stage(global.stage);
+        this._theme = null;
+        this._settingsIds = SPACE_KEYS.map(key => settings.connect(`changed::${key}`, () => this._apply()));
+        // A new shell theme comes without this stylesheet.
+        this._contextId = this._context.connect('changed', () => this._follow());
+        this._apply();
+    }
+
+    // Each setting is the whole space from the icon to the dock's side. The icon's own box, which its highlight fills,
+    // is forced square by the shell: uneven padding would shrink the icon. So it takes the smaller space on all four
+    // sides, the tile around it takes what is left of each, and side margins keep the icons as far apart as the theme
+    // has them. Dash to Dock's margin between its background and the edge goes: the shape reaches the edge anyway.
+    _css() {
+        const edge = this._settings.get_int('dock-space-edge');
+        const far = this._settings.get_int('dock-space-far');
+        const icon = Math.min(edge, far, ICON_ROOM);
+        return SIDES.map(side => {
+            const other = OPPOSITE[side];
+            const across = side === 'top' || side === 'bottom' ? ['left', 'right'] : ['top', 'bottom'];
+            const item = `#dashtodockContainer.${side} #dash #dashtodockDashContainer.${TRANSPARENT} .dash-item-container`;
+            return `${item} .overview-tile, ${item} .app-well-app, ${item} .show-apps {\n` +
+                `    padding-${side}: ${edge - icon}px !important;\n` +
+                `    padding-${other}: ${far - icon}px !important;\n}\n` +
+                `${item} .overview-tile .overview-icon, ${item} .show-apps .overview-icon {\n` +
+                `    padding: ${icon}px !important;\n` +
+                across.map(a => `    margin-${a}: ${ICON_ROOM - icon}px !important;\n`).join('') +
+                `}\n#dashtodockContainer.${side} #dash .dash-background {\n` +
+                `    margin-${side}: 0 !important;\n}\n`;
+        }).join('');
+    }
+
+    _apply() {
+        this._unload();
+        if (!this._settings.get_boolean('dock-enabled'))
+            return;
+        this._file.replace_contents(this._css(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null);
+        this._theme = this._context.get_theme();
+        this._theme?.load_stylesheet(this._file);
+    }
+
+    _follow() {
+        if (this._theme && this._context.get_theme() !== this._theme)
+            this._apply();
+    }
+
+    _unload() {
+        this._theme?.unload_stylesheet(this._file);
+        this._theme = null;
+    }
+
+    destroy() {
+        for (const id of this._settingsIds)
+            this._settings.disconnect(id);
+        this._context.disconnect(this._contextId);
+        this._unload();
+    }
 }
 
 /** The shape behind one of Dash to Dock's docks. */
@@ -101,6 +175,7 @@ export class Docks {
         this._docks = new Map();
         this._idleId = 0;
         this._timeoutId = 0;
+        this._spacing = new DockSpacing(settings);
         const uiGroup = Main.layoutManager.uiGroup;
         const schedule = () => this._schedule();
         const ids = ['child-added', 'child-removed'].map(signal => uiGroup.connect(signal, schedule));
@@ -176,5 +251,6 @@ export class Docks {
         this._disconnects = [];
         for (const [dash, entry] of [...this._docks])
             this._release(dash, entry);
+        this._spacing.destroy();
     }
 }

@@ -76,14 +76,19 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
         };
         settings.connect('changed::top-bar-style', syncMargin);
         syncMargin();
+        const barHeight = number(bar, 'top-bar-height', _('Height'), 0, 100, 1);
+        barHeight.subtitle = _('0 keeps the theme\'s height');
         number(bar, 'top-bar-padding', _('Room beside the buttons'), 0, 64, 1);
-        number(bar, 'top-bar-radius', _('Corner radius'), 0, 64, 1, 1);
-        number(bar, 'top-bar-flare', _('Edge flare radius'), 0, 64, 1, 1);
+        number(bar, 'top-bar-radius', _('Outward-rounded corners, radius'), 0, 64, 1, 1);
+        number(bar, 'top-bar-flare', _('Inward-curved flares, radius'), 0, 64, 1, 1);
 
         const dock = group(_('Dash to Dock'));
         toggle(dock, 'dock-enabled', _('Grow out of the screen edge'));
-        number(dock, 'dock-radius', _('Corner radius'), 0, 64, 1, 1);
-        number(dock, 'dock-flare', _('Edge flare radius'), 0, 64, 1, 1);
+        const edge = number(dock, 'dock-space-edge', _('Space between the apps and the screen edge'), 0, 40, 1);
+        const far = number(dock, 'dock-space-far', _('Space on the apps\' other side'), 0, 40, 1);
+        edge.subtitle = far.subtitle = _('These set the dock\'s height, with Dash to Dock\'s icon size');
+        number(dock, 'dock-radius', _('Outward-rounded corners, radius'), 0, 64, 1, 1);
+        number(dock, 'dock-flare', _('Inward-curved flares, radius'), 0, 64, 1, 1);
 
         const grow = group(_('Grown out of the bars'));
         toggle(grow, 'menus-grow', _('Top bar menus'));
@@ -91,6 +96,6 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
         toggle(grow, 'notifications-grow', _('Notifications'), _('Out of the screen edge while the bar is hidden'));
         toggle(grow, 'osd-grow', _('Volume and brightness popup'), _('Out of the screen edge while the bar is hidden'));
         toggle(grow, 'hidden-clock', _('Hidden clock tab'), _('Hide Top Bar: Multi Monitors\' clock, in this color'));
-        number(grow, 'surface-radius', _('Corner radius'), 0, 64, 1, 1);
+        number(grow, 'surface-radius', _('Outward-rounded corners, radius'), 0, 64, 1, 1);
     }
 }

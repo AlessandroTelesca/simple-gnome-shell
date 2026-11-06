@@ -13,24 +13,3 @@
     border: none !important;
     box-shadow: none !important;
 }
-
-/* The shape already runs on to the edge, so the icons need only a little of the room Dash to Dock keeps there. */
-#dashtodockContainer.bottom #dash #dashtodockDashContainer.simple-gnome-shell-transparent .dash-item-container .app-well-app,
-#dashtodockContainer.bottom #dash #dashtodockDashContainer.simple-gnome-shell-transparent .dash-item-container .show-apps {
-    padding-bottom: 4px !important;
-}
-
-#dashtodockContainer.top #dash #dashtodockDashContainer.simple-gnome-shell-transparent .dash-item-container .app-well-app,
-#dashtodockContainer.top #dash #dashtodockDashContainer.simple-gnome-shell-transparent .dash-item-container .show-apps {
-    padding-top: 4px !important;
-}
-
-#dashtodockContainer.left #dash #dashtodockDashContainer.simple-gnome-shell-transparent .dash-item-container .app-well-app,
-#dashtodockContainer.left #dash #dashtodockDashContainer.simple-gnome-shell-transparent .dash-item-container .show-apps {
-    padding-left: 4px !important;
-}
-
-#dashtodockContainer.right #dash #dashtodockDashContainer.simple-gnome-shell-transparent .dash-item-container .app-well-app,
-#dashtodockContainer.right #dash #dashtodockDashContainer.simple-gnome-shell-transparent .dash-item-container .show-apps {
-    padding-right: 4px !important;
-}

@@ -236,6 +236,41 @@ const STEPS = {
         await wait(800);
         proc.force_exit();
     },
+    async sizes() {
+        const s = schemaSettings(UUID, 'org.gnome.shell.extensions.simple-gnome-shell');
+        await shot('30-sizes-default');
+        say(`default sizes\n[drv]   ${describe()}`);
+        s.set_int('dock-space-edge', 16);
+        s.set_int('dock-space-far', 2);
+        s.set_int('top-bar-height', 44);
+        await wait(700);
+        await shot('31-sizes-big-bar');
+        say(`edge 16, far 2, bar 44: panelBox ${Main.layoutManager.panelBox.height}\n[drv]   ${describe()}`);
+        s.set_int('top-bar-height', 24);
+        s.set_int('dock-space-edge', 0);
+        s.set_int('dock-space-far', 0);
+        await wait(700);
+        await shot('32-sizes-small-bar');
+        say(`edge 0, far 0, bar 24: panelBox ${Main.layoutManager.panelBox.height}\n[drv]   ${describe()}`);
+        Main.panel.statusArea.dateMenu.menu.open(true);
+        await wait(1300);
+        await shot('33-small-bar-menu');
+        Main.panel.statusArea.dateMenu.menu.close(true);
+        await wait(1000);
+        for (const key of ['dock-space-edge', 'dock-space-far', 'top-bar-height'])
+            s.reset(key);
+        s.set_double('top-bar-radius', 6);
+        s.set_double('top-bar-flare', 30);
+        s.set_double('dock-radius', 34);
+        s.set_double('dock-flare', 4);
+        await wait(700);
+        await shot('34-radii');
+        say(`radii changed\n[drv]   ${describe()}`);
+        for (const key of ['top-bar-radius', 'top-bar-flare', 'dock-radius', 'dock-flare'])
+            s.reset(key);
+        await wait(500);
+        say(`reset: panel style "${Main.panel.get_style()}" panelBox ${Main.layoutManager.panelBox.height}`);
+    },
     async lifecycle() {
         const before = shapes().length;
         for (let i = 0; i < 2; i++) {

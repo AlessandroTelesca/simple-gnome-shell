@@ -20,8 +20,11 @@ function isTopBar(actor) {
         actor._rightBox instanceof St.BoxLayout;
 }
 
+// What this extension adds to a panel's inline style: the color, and the height if one is set.
+const OWN_PANEL_STYLE = /background-color: transparent !important;( height: \d+px; min-height: \d+px;)?/;
+
 function withoutPanelStyle(style) {
-    return (style ?? '').replace(PANEL_STYLE, '').trim().replace(/;$/, '');
+    return (style ?? '').replace(OWN_PANEL_STYLE, '').trim().replace(/;$/, '');
 }
 
 /** The shape behind one top bar. */
@@ -50,6 +53,7 @@ class TopBar extends EdgeBar {
             this._applyPadding();
             this._applyBarStyle();
         }));
+        this._ownIds.push(settings.connect('changed::top-bar-height', () => this._applyPanelStyle()));
         this._removeFrames = frames.add(() => this._sync());
     }
 
@@ -72,12 +76,31 @@ class TopBar extends EdgeBar {
         if (this._applying)
             return;
         const style = this._panel.get_style() ?? '';
-        if (style.includes(PANEL_STYLE))
+        const height = this._settings.get_int('top-bar-height');
+        const added = height > 0 ? `${PANEL_STYLE} height: ${height}px; min-height: ${height}px;` : PANEL_STYLE;
+        const own = withoutPanelStyle(style);
+        const wanted = own ? `${own}; ${added}` : added;
+        if (style === wanted)
             return;
         this._applying = true;
-        this._ownPanelStyle = withoutPanelStyle(style);
-        this._panel.set_style(this._ownPanelStyle ? `${this._ownPanelStyle}; ${PANEL_STYLE}` : PANEL_STYLE);
+        this._panel.set_style(wanted);
         this._applying = false;
+        this._alignInBox(height > 0);
+    }
+
+    // Multi Monitors Bar's boxes keep the height the main bar had when they were made, and its bars fill them. A bar of
+    // a chosen height sits at the top of its box instead.
+    _alignInBox(fixed) {
+        if (this._main || fixed === this._alignedInBox)
+            return;
+        this._alignedInBox = fixed;
+        if (fixed) {
+            this._savedY = [this._panel.y_expand, this._panel.y_align];
+            this._panel.y_expand = false;
+            this._panel.y_align = Clutter.ActorAlign.START;
+        } else if (this._savedY) {
+            [this._panel.y_expand, this._panel.y_align] = this._savedY;
+        }
     }
 
     _applyPadding() {
@@ -194,6 +217,7 @@ class TopBar extends EdgeBar {
         if (!isActorValid(panel))
             return;
         panel.disconnect(this._panelStyleId);
+        this._alignInBox(false);
         panel.remove_style_class_name(TRANSPARENT);
         panel.set_style(withoutPanelStyle(panel.get_style()) || null);
         this._boxes.forEach((box, i) => box.set_style(this._boxStyles[i]));
