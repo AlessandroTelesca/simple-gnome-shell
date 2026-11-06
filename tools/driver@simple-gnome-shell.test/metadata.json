@@ -1,0 +1,1 @@
+{"uuid": "driver@simple-gnome-shell.test", "name": "Simple GNOME Shell test driver", "description": "Drives the extension in tools/run-headless.sh.", "shell-version": ["50"]}

@@ -1,0 +1,9 @@
+{
+  "uuid": "simple-gnome-shell@alessandrot",
+  "name": "Simple GNOME Shell",
+  "description": "The top bar and Dash to Dock grow out of the screen edge in a plain color, joined to it by curved flares. Menus, notifications and the volume and brightness popup grow out of the bars the same way. Uses no shaders or blur.",
+  "settings-schema": "org.gnome.shell.extensions.simple-gnome-shell",
+  "shell-version": ["50"],
+  "version": 1,
+  "url": "https://github.com/AlessandroTelesca/simple-gnome-shell"
+}
