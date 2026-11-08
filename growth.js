@@ -75,7 +75,7 @@ function allocatedSize(actor) {
  * through it; closing runs back.
  *
  * The host provides key, content(), shown(), scale(), source(), button() (a rect on the stage), radius(),
- * hold(opening), closed().
+ * hold(opening), closed(), and optionally limit(), the lowest stage y the shape may reach while it grows downwards.
  */
 export class BarGrowth {
     constructor(host) {
@@ -263,7 +263,8 @@ export class BarGrowth {
         const right = lerp(bx + bw, body[0] + body[2], spread);
         // Down out of a top bar to the content's bottom, or up out of a dock to its top.
         if (bar.growDirection > 0) {
-            const reach = lerp(bar.glassEdge(), body[1] + body[3], drop);
+            // The swing past the content stops at the host's limit, if it has one.
+            const reach = Math.min(lerp(bar.glassEdge(), body[1] + body[3], drop), host.limit?.() ?? Infinity);
             this._place([left, body[1], right - left, reach - body[1]], drop);
         } else {
             const reach = lerp(bar.glassEdge(), body[1], drop);

@@ -92,6 +92,14 @@ export function centeredBarWidth(left, center, right, centerOffset) {
 }
 
 /**
+ * The height a menu starting at `top` may take: `wanted`, or less if that would bring its far side within `gap` of
+ * `limit`.
+ */
+export function cappedHeight(wanted, top, limit, gap) {
+    return Math.floor(Math.max(Math.min(wanted, limit - gap - top), 0));
+}
+
+/**
  * The pieces that draw a shape, local to the monitor (`monitorW` x `monitorH`).
  *
  * `body` is [x, y, w, h], already reaching the edge on `side`. `growths` are the things grown out of it, each

@@ -29,6 +29,24 @@ function findDash(actor) {
 }
 
 /**
+ * How far a dock along the bottom of monitor `index` reaches up from the screen edge when shown, 0 without one. It
+ * looks at Dash to Dock itself, so it holds with this extension's dock off, and a hidden dock keeps its size.
+ */
+export function bottomDockThickness(index) {
+    for (const root of Main.layoutManager.uiGroup.get_children()) {
+        if (root.get_name() !== 'dashtodockContainer' || !root.has_style_class_name('bottom') ||
+            (root.monitorIndex ?? Main.layoutManager.primaryIndex) !== index)
+            continue;
+        const dash = findDash(root);
+        if (!dash)
+            continue;
+        const background = dash.get_parent()?.get_children().find(child => child.has_style_class_name?.('dash-background'));
+        return (background ?? dash).get_allocation_box().get_height();
+    }
+    return 0;
+}
+
+/**
  * The room around the dock's apps, which Dash to Dock sets in its stylesheet. St has no variables, and it takes a
  * stylesheet to reach icons Dash to Dock builds later, so one is generated from the settings.
  */

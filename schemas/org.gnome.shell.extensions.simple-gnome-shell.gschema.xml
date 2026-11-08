@@ -98,6 +98,12 @@
       <default>true</default>
       <summary>Draw Hide Top Bar: Multi Monitors' hidden clock tab in this color</summary>
     </key>
+    <key name="notification-center-max-height" type="i">
+      <range min="300" max="2000"/>
+      <default>720</default>
+      <summary>The notification center's maximum height (px)</summary>
+      <description>Its notifications scroll past this. It always stops short of a dock along the bottom of the screen.</description>
+    </key>
     <key name="surface-radius" type="d">
       <range min="0.0" max="64.0"/>
       <default>22.0</default>

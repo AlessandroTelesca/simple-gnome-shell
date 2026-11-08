@@ -1,5 +1,5 @@
 // Run with: gjs -m tests/layout.test.js
-import {composeShape, nearestSide, pinToEdge, centeredBarWidth} from '../layout.js';
+import {composeShape, nearestSide, pinToEdge, centeredBarWidth, cappedHeight} from '../layout.js';
 
 let failures = 0;
 function check(name, condition) {
@@ -131,6 +131,9 @@ check('pinToEdge bottom', eq(pinToEdge([100, 1000, 50, 40], 'bottom', 1920, 1080
 check('pinToEdge left', eq(pinToEdge([10, 100, 50, 40], 'left', 1920, 1080), [0, 100, 60, 40]));
 check('pinToEdge right', eq(pinToEdge([1800, 100, 50, 40], 'right', 1920, 1080), [1800, 100, 120, 40]));
 check('centeredBarWidth', centeredBarWidth(100, 80, 300, 0) === 680 && centeredBarWidth(100, 80, 300, -20) === 700);
+check('cappedHeight: the wanted height when it fits', cappedHeight(720, 40, 1022, 16) === 720);
+check('cappedHeight: stops short of the limit', cappedHeight(720, 40, 742, 16) === 686);
+check('cappedHeight: never negative', cappedHeight(720, 900, 800, 16) === 0);
 
 print(failures ? `${failures} failed` : 'all passed');
 import('system').then(system => system.exit(failures ? 1 : 0));

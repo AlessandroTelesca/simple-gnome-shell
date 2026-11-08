@@ -148,5 +148,8 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
         toggle(grow, 'osd-grow', _('Volume and brightness popup'), _('Out of the screen edge while the bar is hidden'));
         toggle(grow, 'hidden-clock', _('Hidden clock tab'), _('Hide Top Bar: Multi Monitors\' clock, in this color'));
         radius(grow, 'surface-radius', _('Outward-rounded corners, radius'));
+        number(grow, 'notification-center-max-height', _('Notification center, maximum height'), 300, 2000, 10, {
+            note: _('Notifications scroll past this. It always stops short of the dock'),
+        });
     }
 }

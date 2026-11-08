@@ -3,13 +3,19 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
+import {bottomDockThickness} from './dock.js';
 import {isActorValid} from './frames.js';
 import {BarGrowth, animationsEnabled, barFrom} from './growth.js';
+import {cappedHeight} from './layout.js';
 
 const TRANSPARENT = 'simple-gnome-shell-transparent';
 // The BoxPointer's own open and close eases, which are held while the bar grows and shrinks.
 const BOXPOINTER_EASED = ['opacity', 'translation-x', 'translation-y', 'scale-x', 'scale-y'];
 const BOXPOINTER_HOLD_MS = 10000;
+// The shell's class for the notification center, which Multi Monitors Bar's copies of it share.
+const DATE_MENU = 'datemenu-popover';
+// The least room left between the notification center and a dock (px).
+const DOCK_GAP = 16;
 
 function buttonRect(source) {
     if (!isActorValid(source) || !source.mapped)
@@ -30,6 +36,7 @@ class MenuGrowth {
         this._menu = menu;
         this._settings = settings;
         this._openedFrom = null;
+        this._limit = null;
         const actor = menu.actor, box = menu.box;
         this._growth = new BarGrowth({
             key: 'menus',
@@ -39,10 +46,13 @@ class MenuGrowth {
             source: () => this._source(),
             button: () => buttonRect(this._openedFrom ?? menu.sourceActor),
             radius: () => settings.get_double('surface-radius'),
+            limit: () => this._limit,
             // The menu stays where it opens, and stays visible until the shape is back in the bar.
             hold: opening => {
-                if (opening)
+                if (opening) {
+                    this._capHeight();
                     this._fitToBar();
+                }
                 for (const name of BOXPOINTER_EASED) {
                     const ease = actor.get_transition(name);
                     if (!ease)
@@ -67,6 +77,7 @@ class MenuGrowth {
             if (!actor.mapped) {
                 this._growth.release();
                 this._setDrawn(false);
+                this._uncap();
             }
         });
         this._removeFrames = frames.add(() => this._sync());
@@ -75,6 +86,43 @@ class MenuGrowth {
     _source() {
         return (isActorValid(this._openedFrom) && this._openedFrom.mapped
             ? this._openedFrom : this._menu.sourceActor) ?? null;
+    }
+
+    // Limits the notification center to the set height, and to the room above a dock, shown or hidden. The shell only
+    // keeps it on the work area, which a dock that hides by itself is not taken out of. Its lists scroll in what is left.
+    _capHeight() {
+        const box = this._menu.box;
+        const source = this._source();
+        if (!source || !box.has_style_class_name(DATE_MENU))
+            return;
+        const index = Main.layoutManager.findIndexForActor(source);
+        const monitor = Main.layoutManager.monitors[index];
+        box.get_allocation_box();
+        const [, y] = box.get_transformed_position();
+        if (!monitor || !Number.isFinite(y))
+            return;
+        // Where it rests, whatever the open animation has it at now.
+        const top = y - box.translation_y - this._menu.actor.translation_y;
+        const dockTop = monitor.y + monitor.height - bottomDockThickness(index);
+        this._limit = dockTop - DOCK_GAP;
+        const height = cappedHeight(this._settings.get_int('notification-center-max-height'), top, dockTop, DOCK_GAP);
+        // max-height leaves out the padding and is in the theme's units.
+        const node = box.get_theme_node();
+        const extra = node.get_vertical_padding() + node.get_border_width(St.Side.TOP) + node.get_border_width(St.Side.BOTTOM);
+        const scale = St.ThemeContext.get_for_stage(global.stage).scale_factor;
+        const style = `max-height: ${Math.round(Math.max(height - extra, 0) / scale)}px;`;
+        if (box.get_style() !== style)
+            box.set_style(style);
+        this._capped = true;
+    }
+
+    _uncap() {
+        if (!this._capped)
+            return;
+        this._capped = false;
+        this._limit = null;
+        if (isActorValid(this._menu.box))
+            this._menu.box.set_style(null);
     }
 
     // Whether the bar draws the menu's background, rather than the theme.
@@ -141,6 +189,7 @@ class MenuGrowth {
     _sync() {
         if (!this._menu.isOpen || !this._menu.actor.mapped || this._growth.animating)
             return;
+        this._capHeight();
         this._fitToBar();
         this._setDrawn(this._growth.holdAtRest());
     }
@@ -149,6 +198,7 @@ class MenuGrowth {
         this._removeFrames();
         this._growth.release();
         this._setDrawn(false);
+        this._uncap();
         this._menu.disconnect(this._openId);
         if (isActorValid(this._menu.actor))
             this._menu.actor.disconnect(this._mapId);

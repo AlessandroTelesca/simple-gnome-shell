@@ -4,7 +4,7 @@ The top bar and [Dash to Dock](https://extensions.gnome.org/extension/307/dash-t
 
 - **Top bar:** centered and shrunk to its buttons, or across the monitor. The bars [Multi Monitors Bar](https://github.com/AlessandroTelesca/multi-monitors-bar_fapv2) adds on other monitors get the same shape.
 - **Dock:** on any side of the screen and on every monitor. While it slides away, its shape draws back into the edge.
-- **Menus:** top bar menus, and on docks at the top or bottom, app icon and [Dock Tray](https://github.com/AlessandroTelesca/dock-tray) menus, spring out of the bar they were opened from. A menu whose button isn't on a bar keeps the theme's look. A centered top bar and its notification center share their width: whichever is narrower widens to the other.
+- **Menus:** top bar menus, and on docks at the top or bottom, app icon and [Dock Tray](https://github.com/AlessandroTelesca/dock-tray) menus, spring out of the bar they were opened from. A menu whose button isn't on a bar keeps the theme's look. A centered top bar and its notification center share their width: whichever is narrower widens to the other. The notification center has a maximum height, past which its notifications scroll, and always stops short of a dock along the bottom of the screen.
 - **Notifications and the volume and brightness popup:** grow out of the top bar, or out of the screen edge while the bar is hidden.
 - **Hidden clock:** the tab of [Hide Top Bar: Multi Monitors](https://github.com/AlessandroTelesca/hidetopbar-multimonitor) takes the same color.
 
