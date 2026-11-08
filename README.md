@@ -8,7 +8,7 @@ The top bar and [Dash to Dock](https://extensions.gnome.org/extension/307/dash-t
 - **Notifications and the volume and brightness popup:** grow out of the top bar, or out of the screen edge while the bar is hidden.
 - **Hidden clock:** the tab of [Hide Top Bar: Multi Monitors](https://github.com/AlessandroTelesca/hidetopbar-multimonitor) takes the same color.
 
-Everything is set in the preferences: color, opacity, the radii of the outward-rounded corners and the inward-curved flares, the top bar's height, the space above and below the dock's apps, and each of the above on or off.
+Everything is set in the preferences: the color and the color of the text and icons on it, opacity, the radii of the outward-rounded corners and the inward-curved flares, the top bar's height, the space above and below the dock's apps, and each of the above on or off.
 
 GNOME Shell 50, Wayland.
 
@@ -19,7 +19,7 @@ gnome-extensions pack --force \
   --extra-source=layout.js --extra-source=shape.js --extra-source=frames.js --extra-source=spring.js \
   --extra-source=growth.js --extra-source=bar.js --extra-source=topBar.js --extra-source=dock.js \
   --extra-source=menus.js --extra-source=tab.js --extra-source=banners.js --extra-source=osd.js \
-  --extra-source=hiddenClock.js .
+  --extra-source=hiddenClock.js --extra-source=generatedStyle.js --extra-source=textColor.js .
 gnome-extensions install --force simple-gnome-shell@alessandrot.shell-extension.zip
 ```
 

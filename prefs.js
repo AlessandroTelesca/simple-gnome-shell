@@ -76,31 +76,35 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
         const radius = (g, key, title) => number(g, key, title, 0, 64, 1, {digits: 1});
 
         const look = group(_('Look'));
-        const colorRow = new Adw.ActionRow({title: _('Color')});
-        const rgba = new Gdk.RGBA();
-        rgba.parse(settings.get_string('color'));
-        const colorButton = new Gtk.ColorDialogButton({
-            dialog: new Gtk.ColorDialog({with_alpha: false}),
-            rgba,
-            valign: Gtk.Align.CENTER,
-        });
-        colorButton.connect('notify::rgba', () => {
-            const value = hex(colorButton.rgba);
-            if (value !== settings.get_string('color'))
-                settings.set_string('color', value);
-        });
-        watch('color', () => {
-            const value = settings.get_string('color');
-            if (value === hex(colorButton.rgba))
-                return;
-            const color = new Gdk.RGBA();
-            if (color.parse(value))
-                colorButton.rgba = color;
-        });
-        colorRow.add_suffix(colorButton);
-        colorRow.activatable_widget = colorButton;
-        addDefault(colorRow, 'color', defaultOf('color'));
-        look.add(colorRow);
+        const color = (key, title, note) => {
+            const row = new Adw.ActionRow({title});
+            const rgba = new Gdk.RGBA();
+            rgba.parse(settings.get_string(key));
+            const button = new Gtk.ColorDialogButton({
+                dialog: new Gtk.ColorDialog({with_alpha: false}),
+                rgba,
+                valign: Gtk.Align.CENTER,
+            });
+            button.connect('notify::rgba', () => {
+                const value = hex(button.rgba);
+                if (value !== settings.get_string(key))
+                    settings.set_string(key, value);
+            });
+            watch(key, () => {
+                const value = settings.get_string(key);
+                if (value === hex(button.rgba))
+                    return;
+                const parsed = new Gdk.RGBA();
+                if (parsed.parse(value))
+                    button.rgba = parsed;
+            });
+            row.add_suffix(button);
+            row.activatable_widget = button;
+            addDefault(row, key, defaultOf(key), note);
+            look.add(row);
+        };
+        color('color', _('Color'));
+        color('text-color', _('Text and icon color'), _('Set this to go with the color above'));
         number(look, 'opacity', _('Opacity'), 0, 1, 0.05, {digits: 2, unit: ''});
 
         const bar = group(_('Top bar'));

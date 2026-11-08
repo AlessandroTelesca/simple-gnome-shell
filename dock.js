@@ -1,11 +1,10 @@
-import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
-import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {EdgeBar} from './bar.js';
 import {isActorValid} from './frames.js';
+import {GeneratedStylesheet} from './generatedStyle.js';
 import {pinToEdge} from './layout.js';
 
 const TRANSPARENT = 'simple-gnome-shell-transparent';
@@ -46,21 +45,12 @@ export function bottomDockThickness(index) {
     return 0;
 }
 
-/**
- * The room around the dock's apps, which Dash to Dock sets in its stylesheet. St has no variables, and it takes a
- * stylesheet to reach icons Dash to Dock builds later, so one is generated from the settings.
- */
+/** The room around the dock's apps, which Dash to Dock sets in its stylesheet. */
 class DockSpacing {
     constructor(settings) {
         this._settings = settings;
-        const dir = GLib.build_filenamev([GLib.get_user_cache_dir(), 'simple-gnome-shell']);
-        GLib.mkdir_with_parents(dir, 0o755);
-        this._file = Gio.File.new_for_path(GLib.build_filenamev([dir, 'dock-spacing.css']));
-        this._context = St.ThemeContext.get_for_stage(global.stage);
-        this._theme = null;
+        this._style = new GeneratedStylesheet('dock-spacing.css');
         this._settingsIds = SPACE_KEYS.map(key => settings.connect(`changed::${key}`, () => this._apply()));
-        // A new shell theme comes without this stylesheet.
-        this._contextId = this._context.connect('changed', () => this._follow());
         this._apply();
     }
 
@@ -88,29 +78,13 @@ class DockSpacing {
     }
 
     _apply() {
-        this._unload();
-        if (!this._settings.get_boolean('dock-enabled'))
-            return;
-        this._file.replace_contents(this._css(), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null);
-        this._theme = this._context.get_theme();
-        this._theme?.load_stylesheet(this._file);
-    }
-
-    _follow() {
-        if (this._theme && this._context.get_theme() !== this._theme)
-            this._apply();
-    }
-
-    _unload() {
-        this._theme?.unload_stylesheet(this._file);
-        this._theme = null;
+        this._style.set(this._settings.get_boolean('dock-enabled') ? this._css() : null);
     }
 
     destroy() {
         for (const id of this._settingsIds)
             this._settings.disconnect(id);
-        this._context.disconnect(this._contextId);
-        this._unload();
+        this._style.destroy();
     }
 }
 

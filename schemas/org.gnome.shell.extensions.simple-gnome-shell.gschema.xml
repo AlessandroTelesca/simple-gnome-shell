@@ -5,6 +5,11 @@
       <default>"#000000"</default>
       <summary>Color</summary>
     </key>
+    <key name="text-color" type="s">
+      <default>"#ffffff"</default>
+      <summary>The color of the text and symbolic icons on what this extension draws</summary>
+      <description>The tiles behind them, such as calendar days and notification cards, are shades of it.</description>
+    </key>
     <key name="opacity" type="d">
       <range min="0.0" max="1.0"/>
       <default>0.55</default>

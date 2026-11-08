@@ -8,6 +8,7 @@ import {Frames} from './frames.js';
 import {HiddenClocks} from './hiddenClock.js';
 import {Menus} from './menus.js';
 import {Osds} from './osd.js';
+import {TextColor} from './textColor.js';
 import {TopBars} from './topBar.js';
 
 // Draws on the same surfaces, so the two cannot run at once: this one waits while that one is active.
@@ -54,7 +55,7 @@ export default class SimpleShellExtension extends Extension {
         const settings = this._settings;
         this._frames = new Frames();
         // The bars first, for the menus, banners and popups to grow out of.
-        this._parts = [TopBars, Docks, Menus, Banners, Osds, HiddenClocks].map(Part => new Part(settings, this._frames));
+        this._parts = [TopBars, Docks, Menus, Banners, Osds, HiddenClocks, TextColor].map(Part => new Part(settings, this._frames));
     }
 
     _stop() {
