@@ -72,6 +72,13 @@ class TopBar extends EdgeBar {
             isActorValid(source) && source.mapped && this._panel.contains(source);
     }
 
+    // The notification center and a centered bar share their width. Across the monitor, it would fill the screen.
+    menuSpan(menu) {
+        if (!this.drawn || !this._isCentered() || this.button('dateMenu')?.menu !== menu)
+            return null;
+        return [this._monitor.x + this._body[0], this._body[2]];
+    }
+
     _applyPanelStyle() {
         if (this._applying)
             return;

@@ -62,6 +62,11 @@ export class EdgeBar {
         return this._body !== null;
     }
 
+    /** The [x, width] on the stage that `menu` should line up with, or null to leave it its own size. */
+    menuSpan(_menu) {
+        return null;
+    }
+
     _draw() {
         if (!this._body || !this._monitor) {
             if (this._lastKey !== 'hidden') {

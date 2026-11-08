@@ -92,6 +92,65 @@ const STEPS = {
         say(`date closed: visible ${menu.actor.visible}, transparent ${menu.box.has_style_class_name('simple-gnome-shell-transparent')}, box opacity ${menu.box.opacity}`);
         await shot('05-date-closed');
     },
+    // The notification center ends flush with a centered bar, whichever of them is wider. No other menu is touched.
+    async dateMenuFit() {
+        const s = schemaSettings(UUID, 'org.gnome.shell.extensions.simple-gnome-shell');
+        const menu = Main.panel.statusArea.dateMenu.menu;
+        const other = Main.panel.statusArea.quickSettings.menu;
+        const report = label => {
+            const [bx] = menu.box.get_transformed_position();
+            const [px] = Main.panel.get_transformed_position();
+            say(`${label}: bar ${px}+${Main.panel.width}, menu ${bx}+${menu.box.width}, ` +
+                `translation ${menu.box.translation_x}, min set ${menu.box.min_width_set}\n[drv]   ${describe()}`);
+        };
+        const open = async (name, label) => {
+            menu.open(true);
+            await wait(1400);
+            await shot(name);
+            report(label);
+            menu.close(true);
+            await wait(1200);
+        };
+        // A wide bar in the panel's left box, since only the buttons set its width.
+        const spacer = new St.Widget({width: 0});
+        Main.panel._leftBox.add_child(spacer);
+
+        await open('08a-fit-as-is', 'as is');
+        spacer.width = 900;
+        await wait(500);
+        await open('08b-fit-wide-bar', 'wide bar');
+        spacer.width = 180;
+        await wait(500);
+        await open('08c-fit-close-widths', 'bar just wider');
+        // Moved off the bar's center, as a dock fixed to a side does.
+        menu._boxPointer._sourceAlignment = 0.1;
+        await open('08d-fit-off-center', 'off center');
+        menu._boxPointer._sourceAlignment = 0.5;
+
+        menu.open(true);
+        await wait(1400);
+        spacer.width = 600;
+        await wait(400);
+        await shot('08e-fit-bar-resized-open');
+        report('resized while open');
+        menu.close(true);
+        await wait(1200);
+        say(`closed: min set ${menu.box.min_width_set}, translation ${menu.box.translation_x}`);
+
+        other.open(true);
+        await wait(1400);
+        await shot('08f-fit-other-menu');
+        say(`quick settings: min set ${other.box.min_width_set}, translation ${other.box.translation_x}, width ${other.box.width}\n[drv]   ${describe()}`);
+        other.close(true);
+        await wait(1200);
+
+        s.set_string('top-bar-style', 'pill');
+        await wait(500);
+        await open('08g-fit-across', 'across the monitor');
+        s.reset('top-bar-style');
+        spacer.destroy();
+        await wait(500);
+    },
     async quickSettings() {
         const menu = Main.panel.statusArea.quickSettings.menu;
         menu.open(true);
@@ -124,7 +183,7 @@ const STEPS = {
         menu.open(true);
         await wait(1400);
         await shot('07b-second-bar-menu');
-        say(`second bar menu\n[drv]   ${describe()}`);
+        say(`second bar menu: open ${menu.isOpen}\n[drv]   ${describe()}`);
         menu.close(true);
         await wait(1200);
         say(`second bar menu closed: visible ${menu.actor.visible}`);
