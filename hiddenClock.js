@@ -3,8 +3,8 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {isActorValid} from './frames.js';
 import {EdgeTab} from './tab.js';
 
-// The clock Hide Top Bar: Multi Monitors (hidetopbar-multimonitor@alessandrot) shows on a monitor while that monitor's
-// panel is hidden: the uiGroup child of CLOCK_NAME, holding the tab the clock sits on, and inside the tab the actor of
+// The clock Hide Top Bar: Multi Monitors (hidetopbar-multimonitor@alessandrot) keeps below a monitor's panel, which
+// slides over it: the uiGroup child of CLOCK_NAME, holding the tab the clock sits on, and inside the tab the actor of
 // BODY_NAME, the tab without its flares into the screen edge. BACKED_CLASS on the tab tells it to leave the tab
 // unpainted, which is that extension's published way of having another extension draw it. Without this the tab keeps
 // its own fixed dark color.
