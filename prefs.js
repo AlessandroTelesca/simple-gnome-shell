@@ -195,6 +195,7 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
         const grow = group(_('Grown out of the bars'));
         toggle(grow, 'menus-grow', _('Top bar menus'));
         toggle(grow, 'dock-menus-grow', _('Dock menus'), _('On docks along the top or bottom of the screen'));
+        toggle(grow, 'dock-previews', _('Window previews on hover'), _('In place of the app\'s name, for apps with windows'));
         toggle(grow, 'notifications-grow', _('Notifications'), _('Out of the screen edge while the bar is hidden'));
         toggle(grow, 'osd-grow', _('Volume and brightness popup'), _('Out of the screen edge while the bar is hidden'));
         toggle(grow, 'hidden-clock', _('Hidden clock tab'), _('Hide Top Bar: Multi Monitors\' clock, in this color'));

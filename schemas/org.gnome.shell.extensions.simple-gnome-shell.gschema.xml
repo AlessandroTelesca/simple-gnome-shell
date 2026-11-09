@@ -118,6 +118,11 @@
       <default>true</default>
       <summary>Dock menus grow out of the dock</summary>
     </key>
+    <key name="dock-previews" type="b">
+      <default>true</default>
+      <summary>Hovering an app on the dock shows its window previews</summary>
+      <description>Dash to Dock's preview menu, in place of the app's name, for apps with windows.</description>
+    </key>
     <key name="notifications-grow" type="b">
       <default>true</default>
       <summary>Notifications grow out of the top bar</summary>
