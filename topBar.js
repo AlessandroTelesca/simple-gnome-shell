@@ -54,6 +54,8 @@ class TopBar extends EdgeBar {
             this._applyBarStyle();
         }));
         this._ownIds.push(settings.connect('changed::top-bar-height', () => this._applyPanelStyle()));
+        // Read on the next frame, which this asks for.
+        this._ownIds.push(settings.connect('changed::top-bar-width', () => this._panel.queue_relayout()));
         this._removeFrames = frames.add(() => this._sync());
     }
 
@@ -157,8 +159,10 @@ class TopBar extends EdgeBar {
         // Panel adds the work area's offset when it centers its middle box, as for a dock fixed to a side.
         const workArea = Main.layoutManager.getWorkAreaForMonitor(monitor.index);
         const centerOffset = 2 * (workArea.x - monitor.x) + workArea.width - monitor.width;
-        const width = Math.min(maxWidth,
-            centeredBarWidth(natural(panel._leftBox), natural(panel._centerBox), natural(panel._rightBox), centerOffset));
+        const fitted = centeredBarWidth(natural(panel._leftBox), natural(panel._centerBox), natural(panel._rightBox),
+            centerOffset);
+        // A chosen width spreads the buttons apart, but never squeezes them.
+        const width = Math.min(maxWidth, Math.max(fitted, this._settings.get_int('top-bar-width')));
         if (width !== this._centeredWidth) {
             this._centeredWidth = width;
             panel.width = width;

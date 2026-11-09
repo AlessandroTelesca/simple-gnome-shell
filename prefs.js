@@ -123,9 +123,14 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
         addDefault(style, 'top-bar-style', styleNames[styles.indexOf(defaultOf('top-bar-style'))]);
         bar.add(style);
         const margin = number(bar, 'top-bar-margin', _('Side margin'), 0, 200, 1);
+        const width = number(bar, 'top-bar-width', _('Width'), 0, 8000, 10, {
+            note: _('Spreads the buttons apart. Never narrower than they need'),
+            format: value => (value === 0 ? _('0, shrunk to the buttons') : null),
+        });
         const syncStyle = () => {
             const selected = settings.get_string('top-bar-style');
             margin.sensitive = selected === 'pill';
+            width.sensitive = selected === 'center';
             style.selected = Math.max(styles.indexOf(selected), 0);
         };
         watch('top-bar-style', syncStyle);

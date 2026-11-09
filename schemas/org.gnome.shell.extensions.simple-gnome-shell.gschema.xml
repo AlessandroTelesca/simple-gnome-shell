@@ -34,6 +34,12 @@
       <default>14</default>
       <summary>Side margin of the pill style (px)</summary>
     </key>
+    <key name="top-bar-width" type="i">
+      <range min="0" max="8000"/>
+      <default>0</default>
+      <summary>Width of the centered style (px)</summary>
+      <description>0 shrinks the bar to its buttons. A larger width spreads them apart; the bar is never narrower than its buttons nor wider than the monitor.</description>
+    </key>
     <key name="top-bar-padding" type="i">
       <range min="0" max="64"/>
       <default>8</default>
