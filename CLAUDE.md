@@ -51,11 +51,41 @@ them, and undo everything in `destroy()`. The shell and Dash to Dock internals i
   - Launch apps with `Shell.AppSystem.get_default().lookup_app(id).open_new_window(-1)`. Dash to Dock ignores windows
     with `skip_taskbar` (the VM's Firefox window has it).
 
-## Install locally
+## Install locally and reload
 
-See README "Install" (`gnome-extensions pack` with every module as `--extra-source`). A new module has to be added
-there too. Then load it into the running session with `gext-reload simple-gnome-shell@alessandrot` (the user's script,
-`~/GIT/gext-reload`, with its helper extension `gext-reload@alessandrot`), so no log out is needed. Check with
-`gnome-extensions info simple-gnome-shell@alessandrot` (State: ACTIVE) and
-`journalctl --user -b --since -1min -g "Simple GNOME Shell|JS ERROR"`. The user's notes on it are in Obsidian:
-`~/Dokumente/Obsidian/LinuxDocs/Customizations/15-Load-New-GNOME-Extension-Without-Relogin.md`.
+1. Pack and install as in README "Install" (`gnome-extensions pack` with every module as `--extra-source`, then
+   `gnome-extensions install --force simple-gnome-shell@alessandrot.shell-extension.zip`). A new module has to be added
+   to that command too.
+2. Load it into the running session with **`gext-reload simple-gnome-shell@alessandrot`**. On Wayland the shell can't
+   restart in place, and an install alone only takes effect at the next login.
+
+### `gext-reload`: the user's reload script
+
+- Script: `~/.local/bin/gext-reload`. Source: `~/GIT/gext-reload` (github.com/AlessandroTelesca/gext-reload).
+- It needs its helper extension `gext-reload@alessandrot` to be ACTIVE. The helper is enabled, so it runs from every
+  login.
+- How it works:
+  - It copies the *installed* extension to `$XDG_RUNTIME_DIR/gext-reload/<timestamp>/<uuid>`. The shell caches module
+    code by path, so a new path loads fresh code.
+  - In the copy it renames every `GObject.registerClass` class and `GTypeName` to `<Name>_r<timestamp>`. This avoids
+    `Type name … is already registered`.
+  - It calls the helper's D-Bus method `io.github.alessandrotelesca.GextReload.Reload(uuid, dir)`. The helper unloads
+    the running extension and loads the copy. `org.gnome.Shell.Eval` is blocked on the real session, which is why
+    the helper exists.
+- Without the helper, the script prints a Looking Glass line (also copied to the clipboard). The user runs it with
+  Super+R, `lg`, paste into the Evaluator, Enter.
+- The copy is gone after logout, and the next login loads the installed version. Old code stays in memory until
+  logout.
+- Check the result:
+  - `gnome-extensions info simple-gnome-shell@alessandrot` shows State: ACTIVE.
+  - `journalctl --user -b --since -1min -g "Simple GNOME Shell|JS ERROR"` shows no errors.
+- Risks:
+  - A reload runs the code in the live shell. A JS error only puts the extension in ERROR, but a Clutter layout
+    error aborts the shell and logs the user out.
+  - Anything `destroy()` doesn't undo is left behind by a reload. Patched functions and signal handlers are the
+    usual cases.
+  - So test risky changes in the VM (above) first.
+- If the session crashed:
+  - Find the cause: `journalctl -b -g "Clutter-ERROR|ClutterBoxLayout|JS ERROR"`.
+  - Then `gnome-extensions disable <uuid>` and `gsettings set org.gnome.shell disable-user-extensions false`.
+- The user's full notes: `~/Dokumente/Obsidian/LinuxDocs/Customizations/15-Load-New-GNOME-Extension-Without-Relogin.md`.

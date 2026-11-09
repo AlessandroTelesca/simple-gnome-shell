@@ -81,7 +81,10 @@ class LabelGrowth {
     }
 
     _show() {
-        // Dash to Dock places the label and starts its fade, which the growth then takes over.
+        // Drawn before Dash to Dock places the label, which it does from the label's size: the dock's own style puts it
+        // closer to the dock. Dash to Dock then starts its fade, which the growth takes over.
+        if (animationsEnabled() && this._growth.growsOutOfBar)
+            this._setDrawn(true);
         Object.getPrototypeOf(this._item).showLabel.call(this._item);
         this._showing = true;
         if (!isActorValid(this._label) || !this._label.visible || !animationsEnabled())

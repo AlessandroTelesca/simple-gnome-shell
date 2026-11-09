@@ -13,3 +13,11 @@
     border: none !important;
     box-shadow: none !important;
 }
+
+/* A dock's app name grown out of the dock sits closer to it than Dash to Dock's floating label. */
+.dash-label.bottom.simple-gnome-shell-transparent {
+    margin-bottom: 3px !important;
+}
+.dash-label.top.simple-gnome-shell-transparent {
+    margin-top: 3px !important;
+}
