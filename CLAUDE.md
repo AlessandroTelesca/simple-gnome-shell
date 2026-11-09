@@ -16,6 +16,9 @@ feature list.
   installed `windowPreview.js`, so it is the same module instance. It opens without a `PopupMenuManager` (no grab) and
   without `popup()` (no keyboard focus). It patches `shouldShowTooltip` on each app icon to hide the name label, and
   removes the patch on destroy. Being a `PopupMenu`, the growth comes from `menus.js`.
+- `labels.js`: the dock's app name labels. It patches `showLabel` and `hideLabel` on each Dash to Dock item
+  container (all of a dock's, hooked when the pointer comes onto the dock) to run them through a `BarGrowth`, and removes the patch on
+  destroy. The "Dock menus" setting covers it.
 - `layout.js`, `shape.js`, `blur.js`, `spring.js`, `frames.js`: geometry, drawing, blur, springs, the per-frame loop.
 - `prefs.js` and `schemas/`: settings. After changing the schema, run `glib-compile-schemas schemas`.
 
