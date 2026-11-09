@@ -13,7 +13,7 @@
     </key>
     <key name="opacity" type="d">
       <range min="0.0" max="1.0"/>
-      <default>0.55</default>
+      <default>0.8</default>
       <summary>Tint strength</summary>
       <description>The tint color's opacity over the blur. At 1, the blur does not show.</description>
     </key>
@@ -34,7 +34,7 @@
     </key>
     <key name="blur-radius" type="i">
       <range min="1" max="100"/>
-      <default>24</default>
+      <default>10</default>
       <summary>Blur strength (px)</summary>
       <description>About how far the blur spreads each point.</description>
     </key>
@@ -76,7 +76,7 @@
     </key>
     <key name="top-bar-radius" type="d">
       <range min="0.0" max="64.0"/>
-      <default>22.0</default>
+      <default>16.0</default>
       <summary>Radius of the outward-rounded corners (px)</summary>
     </key>
     <key name="top-bar-flare" type="d">
@@ -91,12 +91,12 @@
     </key>
     <key name="dock-space-edge" type="i">
       <range min="0" max="40"/>
-      <default>6</default>
+      <default>9</default>
       <summary>Space between the apps and the screen edge (px)</summary>
     </key>
     <key name="dock-space-far" type="i">
       <range min="0" max="40"/>
-      <default>6</default>
+      <default>9</default>
       <summary>Space on the apps' other side (px)</summary>
     </key>
     <key name="dock-radius" type="d">
