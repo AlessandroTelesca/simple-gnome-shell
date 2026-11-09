@@ -2,8 +2,6 @@
 
 The top bar and [Dash to Dock](https://extensions.gnome.org/extension/307/dash-to-dock/) grow out of the screen edge, joined to it by curved flares. Menus, notifications and the volume and brightness popup grow out of the bars the same way. What is behind them is blurred and tinted. Each shape is a few rounded rectangles and small Cairo corners, drawn again only when the shape changes.
 
-This is a fork of [Simple GNOME Shell](https://github.com/AlessandroTelesca/simple-gnome-shell) that adds the blur.
-
 - **Top bar:** centered and shrunk to its buttons, or across the monitor. The bars [Multi Monitors Bar](https://github.com/AlessandroTelesca/multi-monitors-bar_fapv2) adds on other monitors get the same shape.
 - **Dock:** on any side of the screen and on every monitor. While it slides away, its shape draws back into the edge.
 - **Menus:** top bar menus, and on docks at the top or bottom, app icon and [Dock Tray](https://github.com/AlessandroTelesca/dock-tray) menus, spring out of the bar they were opened from. A menu whose button isn't on a bar keeps the theme's look. A centered top bar and its notification center share their width: whichever is narrower widens to the other. The notification center has a maximum height, past which its notifications scroll, and always stops short of a dock along the bottom of the screen.
