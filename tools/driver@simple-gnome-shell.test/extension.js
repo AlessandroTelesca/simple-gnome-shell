@@ -72,6 +72,32 @@ function findAppIcon() {
 }
 
 const STEPS = {
+    // Each blur style under a light tint, with the notification center open for its corners and fillets.
+    async blur() {
+        const s = schemaSettings(UUID, 'org.gnome.shell.extensions.simple-gnome-shell');
+        const saved = ['opacity', 'blur', 'blur-style', 'blur-radius'].map(k => [k, s.get_value(k)]);
+        const menu = Main.panel.statusArea.dateMenu.menu;
+        s.set_double('opacity', 0.2);
+        menu.open(true);
+        await wait(1400);
+        for (const [style, radius] of [['smooth', 24], ['fast', 24], ['frosted', 24], ['smooth', 60], ['smooth', 4]]) {
+            s.set_boolean('blur', true);
+            s.set_string('blur-style', style);
+            s.set_int('blur-radius', radius);
+            await wait(300);
+            await shot(`00-blur-${style}-${radius}`);
+        }
+        s.set_boolean('blur', false);
+        await wait(300);
+        await shot('00-blur-off');
+        menu.close(true);
+        await wait(1200);
+        for (const [k, v] of saved)
+            s.set_value(k, v);
+        await wait(300);
+        const blurs = Main.layoutManager.uiGroup.get_children().filter(a => a.get_name() === 'simple-gnome-shell-blur');
+        say(`blur layers ${blurs.length}, visible ${blurs.filter(a => a.visible).map(a => `${a.x},${a.y} ${a.width}x${a.height}`).join(' | ')}`);
+    },
     async idle() {
         await shot('01-idle');
         say(`shapes ${shapes().length}, visible ${visibleShapes().length}\n[drv]   ${describe()}`);

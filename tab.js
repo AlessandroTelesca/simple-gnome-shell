@@ -10,10 +10,14 @@ import {Shape} from './shape.js';
 export class EdgeTab {
     constructor(settings) {
         this._settings = settings;
-        this._shape = new Shape();
+        this._shape = new Shape(settings);
         this._shape.setColor(settings.get_string('color'));
         this._colorId = settings.connect('changed::color', () => {
             this._shape.setColor(settings.get_string('color'));
+            this._lastKey = '';
+        });
+        // Turning the blur on needs the pieces again.
+        this._blurId = settings.connect('changed::blur', () => {
             this._lastKey = '';
         });
         this._lastKey = '';
@@ -34,7 +38,7 @@ export class EdgeTab {
             return;
         this._lastKey = key;
         const pieces = composeShape({side, monitorW: mw, monitorH: mh, body, radius, flare});
-        this._shape.apply(pieces, [mx, my, mw, mh], alpha);
+        this._shape.apply(pieces, [mx, my, mw, mh], alpha, opacity);
     }
 
     hide() {
@@ -44,6 +48,7 @@ export class EdgeTab {
 
     destroy() {
         this._settings.disconnect(this._colorId);
+        this._settings.disconnect(this._blurId);
         this._shape.destroy();
     }
 }

@@ -11,7 +11,7 @@ export class EdgeBar {
         this._settings = settings;
         this._radiusKey = radiusKey;
         this._flareKey = flareKey;
-        this.shape = new Shape();
+        this.shape = new Shape(settings);
         this.shape.setColor(settings.get_string('color'));
         this._growths = new Map();
         this._side = 'top';
@@ -19,7 +19,7 @@ export class EdgeBar {
         this._body = null;
         this._opacity = 255;
         this._lastKey = '';
-        this._settingsIds = ['color', 'opacity', radiusKey, flareKey].map(key =>
+        this._settingsIds = ['color', 'opacity', 'blur', radiusKey, flareKey].map(key =>
             settings.connect(`changed::${key}`, () => {
                 this.shape.setColor(settings.get_string('color'));
                 this._lastKey = '';
@@ -88,7 +88,7 @@ export class EdgeBar {
             flare: this._settings.get_double(this._flareKey),
         });
         const alpha = Math.round(this._settings.get_double('opacity') * this._opacity);
-        this.shape.apply(pieces, [mx, my, mw, mh], alpha);
+        this.shape.apply(pieces, [mx, my, mw, mh], alpha, this._opacity);
     }
 
     destroy() {

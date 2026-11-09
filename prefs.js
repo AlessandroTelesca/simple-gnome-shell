@@ -75,7 +75,7 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
         };
         const radius = (g, key, title) => number(g, key, title, 0, 64, 1, {digits: 1});
 
-        const look = group(_('Look'));
+        const look = group(_('Tint'));
         const color = (key, title, note) => {
             const row = new Adw.ActionRow({title});
             const rgba = new Gdk.RGBA();
@@ -103,9 +103,51 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
             addDefault(row, key, defaultOf(key), note);
             look.add(row);
         };
-        color('color', _('Color'));
-        color('text-color', _('Text and icon color'), _('Set this to go with the color above'));
-        number(look, 'opacity', _('Opacity'), 0, 1, 0.05, {digits: 2, unit: ''});
+        color('color', _('Tint color'), _('Laid over the blur'));
+        number(look, 'opacity', _('Tint strength'), 0, 1, 0.05, {
+            digits: 2, unit: '', note: _('At 1, the blur does not show'),
+        });
+        color('text-color', _('Text and icon color'), _('Set this to go with the tint'));
+
+        const blur = group(_('Blur'));
+        toggle(blur, 'blur', _('Blur what is behind'), _('The bars, menus, notifications and popups'));
+        const blurStyles = ['smooth', 'fast', 'frosted'];
+        const blurStyleNames = [_('Smooth'), _('Fast'), _('Frosted')];
+        const blurStyleNotes = [
+            _('Even, gaussian-like'),
+            _('Fewer samples, a little blocky when strong'),
+            _('Smooth, with a fine grain'),
+        ];
+        const blurStyle = new Adw.ComboRow({
+            title: _('Style'),
+            model: Gtk.StringList.new(blurStyleNames),
+            selected: Math.max(blurStyles.indexOf(settings.get_string('blur-style')), 0),
+        });
+        blurStyle.connect('notify::selected', () => {
+            if (settings.get_string('blur-style') !== blurStyles[blurStyle.selected])
+                settings.set_string('blur-style', blurStyles[blurStyle.selected]);
+        });
+        const blurDefault = blurStyles.indexOf(defaultOf('blur-style'));
+        const syncBlurStyle = () => {
+            const i = Math.max(blurStyles.indexOf(settings.get_string('blur-style')), 0);
+            blurStyle.selected = i;
+            // addDefault() puts the default after the note.
+            blurStyle.subtitle = `${blurStyleNotes[i]} · ${_('Default: %s').format(blurStyleNames[blurDefault])}`;
+        };
+        addDefault(blurStyle, 'blur-style', blurStyleNames[blurDefault]);
+        blur.add(blurStyle);
+        const blurRadius = number(blur, 'blur-radius', _('Strength'), 1, 100, 1, {
+            note: _('About how far each point spreads'),
+        });
+        const syncBlur = () => {
+            const on = settings.get_boolean('blur');
+            blurStyle.sensitive = on;
+            blurRadius.sensitive = on;
+        };
+        watch('blur-style', syncBlurStyle);
+        watch('blur', syncBlur);
+        syncBlurStyle();
+        syncBlur();
 
         const bar = group(_('Top bar'));
         toggle(bar, 'top-bar-enabled', _('Grow out of the screen edge'));
