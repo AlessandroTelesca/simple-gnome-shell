@@ -54,4 +54,8 @@ them, and undo everything in `destroy()`. The shell and Dash to Dock internals i
 ## Install locally
 
 See README "Install" (`gnome-extensions pack` with every module as `--extra-source`). A new module has to be added
-there too. Wayland needs a log out and in.
+there too. Then load it into the running session with `gext-reload simple-gnome-shell@alessandrot` (the user's script,
+`~/GIT/gext-reload`, with its helper extension `gext-reload@alessandrot`), so no log out is needed. Check with
+`gnome-extensions info simple-gnome-shell@alessandrot` (State: ACTIVE) and
+`journalctl --user -b --since -1min -g "Simple GNOME Shell|JS ERROR"`. The user's notes on it are in Obsidian:
+`~/Dokumente/Obsidian/LinuxDocs/Customizations/15-Load-New-GNOME-Extension-Without-Relogin.md`.
