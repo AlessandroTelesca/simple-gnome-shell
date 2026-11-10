@@ -49,6 +49,7 @@ export class DockBar {
         this._host = null;
         this._origins = new Map(); // button container -> {parent, index, side, destroyId}
         this._menus = new Map(); // indicator -> {menu, id, ownOpen, lastY}
+        this._hiddenByUs = new Set(); // button containers hidden by the "left out" setting
         this._idleId = 0;
         this._timeoutId = 0;
         this._syncIdleId = 0;
@@ -69,6 +70,7 @@ export class DockBar {
         const settingsIds = [
             settings.connect('changed::top-bar-in-dock', () => this._scan(true)),
             settings.connect('changed::dock-bar-order', () => this._syncButtons()),
+            settings.connect('changed::dock-bar-hidden', () => this._syncButtons()),
         ];
         const extensionsId = Main.extensionManager.connect('extension-state-changed', schedule);
         this._disconnects = [
@@ -222,6 +224,7 @@ export class DockBar {
             entries.sort((a, b) => rank(a) - rank(b));
             this._fill(host.left, entries.filter(entry => rank(entry) < apps));
             this._fill(host.right, entries.filter(entry => rank(entry) > apps));
+            this._hideLeftOut(entries);
             this._centerQuickSettings();
             this._syncClones();
         } finally {
@@ -298,6 +301,22 @@ export class DockBar {
         });
     }
 
+    // Hides the buttons the settings leave out, and shows again those that are back in. A button that hides itself,
+    // as the keyboard layout's does with one layout, is not touched.
+    _hideLeftOut(entries) {
+        const leftOut = this._settings.get_strv('dock-bar-hidden');
+        for (const {role, container} of entries) {
+            if (leftOut.includes(role)) {
+                if (container.visible) {
+                    this._hiddenByUs.add(container);
+                    container.hide();
+                }
+            } else if (this._hiddenByUs.delete(container)) {
+                container.show();
+            }
+        }
+    }
+
     // Quick settings opens from its button's left edge and counts on the screen edge to push it back. In the dock it
     // would hang past the dock's end, so there it opens centered on its button.
     _centerQuickSettings() {
@@ -336,6 +355,11 @@ export class DockBar {
         const ours = new Set(this._slots.flatMap(slot => [slot.left, slot.right]));
         if (this._host)
             [this._host.left, this._host.right].forEach(end => ours.add(end));
+        for (const container of this._hiddenByUs) {
+            if (isActorValid(container))
+                container.show();
+        }
+        this._hiddenByUs.clear();
         const origins = [...this._origins].sort(([, a], [, b]) => a.index - b.index);
         this._origins.clear();
         for (const [container, origin] of origins) {

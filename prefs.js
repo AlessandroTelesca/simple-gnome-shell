@@ -211,7 +211,7 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
         resetOrder.connect('clicked', () => settings.reset('dock-bar-order'));
         const orderHead = new Adw.ActionRow({
             title: _('Order, from left to right'),
-            subtitle: _('Buttons the top bar gets later are added next to the apps'),
+            subtitle: _('The switches leave a button out. Buttons the top bar gets later are added next to the apps'),
         });
         orderHead.add_suffix(resetOrder);
         inDock.add(orderHead);
@@ -220,6 +220,7 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
                 inDock.remove(row);
             const saved = settings.get_strv('dock-bar-order');
             const order = saved.includes(APPS) ? saved : [...saved, APPS];
+            const leftOut = settings.get_strv('dock-bar-hidden');
             const move = (from, to) => {
                 const next = [...order];
                 next.splice(to, 0, ...next.splice(from, 1));
@@ -231,8 +232,21 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
                     title: apps ? _('The dock\'s apps') : buttonNames[name] ?? name,
                     subtitle: apps ? _('What is above goes left of them, what is below right') : '',
                 });
-                if (apps)
+                if (apps) {
                     row.add_prefix(new Gtk.Image({icon_name: 'view-app-grid-symbolic'}));
+                } else {
+                    // Whether the button is in the dock at all.
+                    const shown = new Gtk.Switch({
+                        active: !leftOut.includes(name),
+                        valign: Gtk.Align.CENTER,
+                        tooltip_text: _('Show in the dock'),
+                    });
+                    shown.connect('notify::active', () => {
+                        const rest = settings.get_strv('dock-bar-hidden').filter(other => other !== name);
+                        settings.set_strv('dock-bar-hidden', shown.active ? rest : [...rest, name]);
+                    });
+                    row.add_suffix(shown);
+                }
                 for (const [icon, tip, to] of [['go-up-symbolic', _('Move left'), i - 1], ['go-down-symbolic', _('Move right'), i + 1]]) {
                     const button = new Gtk.Button({
                         icon_name: icon,
