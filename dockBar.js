@@ -23,7 +23,7 @@ const ACTIVE = ExtensionState.ACTIVE ?? ExtensionState.ENABLED;
 // comes back only if no dock is there after this long.
 const RESCAN_MS = 1000;
 // A button's highlight is this high (px), in the middle of the dock; the button takes the pointer across the whole dock.
-const PILL = 32;
+const PILL = 40;
 const MIN_BORDER = 3;
 
 const HORIZONTAL = ['top', 'bottom'];
@@ -540,8 +540,9 @@ export class DockBar {
     }
 
     // The buttons span the dock, so the pointer has them from the screen edge on, as it has the apps. Their highlight
-    // is cut down to a pill in the middle by transparent borders, as the theme does it in the top bar. The apps set the
-    // dock's thickness, whatever the buttons need.
+    // is cut down to a pill in the middle by transparent borders, as the theme does it in the top bar. The borders are
+    // as wide on all four sides: St takes each side's border off the corner radius, so uneven ones make the pill's ends
+    // elliptical. The apps set the dock's thickness, whatever the buttons need.
     _fitHighlight() {
         const apps = this._host.container.get_children().find(child => child.get_name() === 'dashtodockDashScrollview');
         const thickness = apps?.get_preferred_height(-1)[1] ?? 0;
@@ -552,8 +553,7 @@ export class DockBar {
         if (border === this._border)
             return;
         this._border = border;
-        const borders = width => ['top', 'bottom'].map(side =>
-            `    border-${side}: ${width}px solid transparent !important;\n`).join('');
+        const borders = width => `    border: ${width}px solid transparent !important;\n`;
         // The clock's highlight is on its label.
         const clock = `.${BAR_CLASS} .panel-button.clock-display`;
         this._style.set(`.${BAR_CLASS} .panel-button {\n${borders(border)}}\n` +
