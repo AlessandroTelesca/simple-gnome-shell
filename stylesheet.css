@@ -42,8 +42,10 @@
     font-weight: bold;
     color: #ffffff;
     box-shadow: inset 0 0 0 100px transparent;
-    -natural-hpadding: 12px;
-    -minimum-hpadding: 6px;
+    /* Less than in the top bar: the borders around the highlight are wider here, and take up the room between two
+       buttons. */
+    -natural-hpadding: 6px;
+    -minimum-hpadding: 3px;
 }
 .simple-gnome-shell-dock-bar .panel-button:focus,
 .simple-gnome-shell-dock-bar .panel-button:hover {
@@ -94,6 +96,8 @@
 .simple-gnome-shell-dock-bar .panel-button.clock-display {
     box-shadow: none;
     border: none;
+    -natural-hpadding: 0px;
+    -minimum-hpadding: 0px;
 }
 .simple-gnome-shell-dock-bar .panel-button.clock-display .clock {
     transition-duration: 150ms;
