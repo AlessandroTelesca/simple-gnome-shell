@@ -71,7 +71,7 @@ them, and undo everything in `destroy()`. The shell and Dash to Dock internals i
 - It needs its helper extension `gext-reload@alessandrot` to be ACTIVE. The helper is enabled, so it runs from every
   login.
 - How it works:
-  - It copies the *installed* extension to `$XDG_RUNTIME_DIR/gext-reload/<timestamp>/<uuid>`. The shell caches module
+  - It copies the *installed* extension to `$XDG_RUNTIME_DIR/gext-reload/<timestamp>/gnome-shell/extensions/<uuid>`. The shell caches module
     code by path, so a new path loads fresh code.
   - In the copy it renames every `GObject.registerClass` class and `GTypeName` to `<Name>_r<timestamp>`. This avoids
     `Type name … is already registered`.
