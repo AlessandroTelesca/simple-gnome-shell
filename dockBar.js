@@ -23,7 +23,7 @@ const ACTIVE = ExtensionState.ACTIVE ?? ExtensionState.ENABLED;
 // comes back only if no dock is there after this long.
 const RESCAN_MS = 1000;
 // A button's highlight is this high (px), in the middle of the dock; the button takes the pointer across the whole dock.
-const PILL = 40;
+const PILL = 44;
 const MIN_BORDER = 3;
 
 const HORIZONTAL = ['top', 'bottom'];
