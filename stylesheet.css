@@ -6,6 +6,11 @@
     box-shadow: none !important;
 }
 
+/* A top bar button's menu grown upwards out of a dock: the theme's margin below it would hold it off the dock. */
+.popup-menu.panel-menu.simple-gnome-shell-opens-up {
+    margin-bottom: 0 !important;
+}
+
 /* Dash to Dock's own background. */
 #dashtodockDashContainer.simple-gnome-shell-transparent .dash-background,
 .simple-gnome-shell-transparent #dashtodockContainer {

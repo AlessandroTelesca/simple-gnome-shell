@@ -9,6 +9,9 @@ import {BarGrowth, animationsEnabled, barFrom} from './growth.js';
 import {cappedHeight} from './layout.js';
 
 const TRANSPARENT = 'simple-gnome-shell-transparent';
+// On a menu that grows upwards, out of a dock. The theme keeps a top bar button's menu off the bottom of the screen
+// with a margin below it, which would stand between such a menu and the dock.
+const OPENS_UP = 'simple-gnome-shell-opens-up';
 // The BoxPointer's own open and close eases, which are held while the bar grows and shrinks.
 const BOXPOINTER_EASED = ['opacity', 'translation-x', 'translation-y', 'scale-x', 'scale-y'];
 const BOXPOINTER_HOLD_MS = 10000;
@@ -179,8 +182,13 @@ class MenuGrowth {
     }
 
     _onOpenState(open) {
-        if (open)
+        if (open) {
             this._openedFrom = this._menu.sourceActor;
+            if (barFrom(this._source(), 'menus')?.growDirection < 0)
+                this._menu.actor.add_style_class_name(OPENS_UP);
+            else
+                this._menu.actor.remove_style_class_name(OPENS_UP);
+        }
         // Without animations it is just there, in the bar's shape, which _sync() then holds.
         if (!animationsEnabled()) {
             if (!open) {
@@ -208,6 +216,8 @@ class MenuGrowth {
         this._growth.release();
         this._setDrawn(false);
         this._uncap();
+        if (isActorValid(this._menu.actor))
+            this._menu.actor.remove_style_class_name(OPENS_UP);
         this._menu.disconnect(this._openId);
         if (isActorValid(this._menu.actor))
             this._menu.actor.disconnect(this._mapId);
