@@ -24,6 +24,12 @@ const ACTIVE = ExtensionState.ACTIVE ?? ExtensionState.ENABLED;
 const RESCAN_MS = 1000;
 // A button's highlight is this high (px), in the middle of the dock; the button takes the pointer across the whole dock.
 const PILL = 44;
+// The screen recording and sharing indicators are a filled pill at all times, which is this high: at the others'
+// height it would be nearly a circle.
+const INDICATOR_PILL = 28;
+// The room beside a button's content, inside its highlight (px).
+const ROOM = 10;
+const INDICATOR_ROOM = 8;
 const MIN_BORDER = 3;
 
 const HORIZONTAL = ['top', 'bottom'];
@@ -553,11 +559,19 @@ export class DockBar {
         if (border === this._border)
             return;
         this._border = border;
-        const borders = width => `    border: ${width}px solid transparent !important;\n`;
-        // The clock's highlight is on its label.
-        const clock = `.${BAR_CLASS} .panel-button.clock-display`;
-        this._style.set(`.${BAR_CLASS} .panel-button {\n${borders(border)}}\n` +
-            `${clock} {\n${borders(0)}}\n${clock} .clock {\n${borders(border)}}\n`);
+        // A panel button asks for its content's width and this padding, and leaves the borders out: they come off the
+        // padding. So the padding is the borders' width and the room wanted beside the content.
+        const inset = (width, room) => `    border: ${width}px solid transparent !important;\n` +
+            `    -natural-hpadding: ${width + room}px;\n    -minimum-hpadding: ${width + Math.round(room / 2)}px;\n`;
+        const button = `.${BAR_CLASS} .panel-button`;
+        // The clock's highlight is on its label, which counts its borders itself.
+        const clock = `${button}.clock-display`;
+        const small = Math.max(MIN_BORDER, Math.round((thickness / scale - INDICATOR_PILL) / 2));
+        this._style.set(`${button} {\n${inset(border, ROOM)}}\n` +
+            `${clock} {\n    border: 0px solid transparent !important;\n` +
+            '    -natural-hpadding: 0px;\n    -minimum-hpadding: 0px;\n}\n' +
+            `${clock} .clock {\n    border: ${border}px solid transparent !important;\n}\n` +
+            `${button}.screen-recording-indicator, ${button}.screen-sharing-indicator {\n${inset(small, INDICATOR_ROOM)}}\n`);
     }
 
     destroy() {

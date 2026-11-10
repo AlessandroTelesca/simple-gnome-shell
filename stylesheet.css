@@ -42,10 +42,9 @@
     font-weight: bold;
     color: #ffffff;
     box-shadow: inset 0 0 0 100px transparent;
-    /* A little less than in the top bar: the borders around the highlight are wider here, and take up the room between two
-       buttons. */
-    -natural-hpadding: 10px;
-    -minimum-hpadding: 5px;
+    /* Until the generated stylesheet sets them with the borders. */
+    -natural-hpadding: 12px;
+    -minimum-hpadding: 6px;
 }
 .simple-gnome-shell-dock-bar .panel-button:focus,
 .simple-gnome-shell-dock-bar .panel-button:hover {
@@ -91,6 +90,20 @@
 .simple-gnome-shell-dock-bar .panel-button.screen-sharing-indicator {
     color: #fafafb;
     box-shadow: inset 0 0 0 100px #ff7800;
+}
+.simple-gnome-shell-dock-bar .panel-button.screen-recording-indicator:focus,
+.simple-gnome-shell-dock-bar .panel-button.screen-recording-indicator:hover {
+    box-shadow: inset 0 0 0 100px #d61f2d;
+}
+.simple-gnome-shell-dock-bar .panel-button.screen-recording-indicator:active {
+    box-shadow: inset 0 0 0 100px #e02a37;
+}
+.simple-gnome-shell-dock-bar .panel-button.screen-sharing-indicator:focus,
+.simple-gnome-shell-dock-bar .panel-button.screen-sharing-indicator:hover {
+    box-shadow: inset 0 0 0 100px #ff861a;
+}
+.simple-gnome-shell-dock-bar .panel-button.screen-sharing-indicator:active {
+    box-shadow: inset 0 0 0 100px #ff902e;
 }
 /* The clock's highlight is on its label, not on its button. */
 .simple-gnome-shell-dock-bar .panel-button.clock-display {

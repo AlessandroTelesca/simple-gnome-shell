@@ -117,6 +117,16 @@ function css(color) {
     out.push(rule(`${clock}:active .clock, ${clock}:checked .clock`, `box-shadow: inset 0 0 0 100px ${shade(0.28)}`));
     out.push(rule(`${DOCK_BAR} .panel-button.screen-recording-indicator, ${DOCK_BAR} .panel-button.screen-sharing-indicator`,
         'color: #fafafb'));
+    // They keep their own fill under the pointer too, which the highlight above would replace.
+    for (const [name, rest, hover, active] of [
+        ['screen-recording-indicator', '#c01c28', '#d61f2d', '#e02a37'],
+        ['screen-sharing-indicator', '#ff7800', '#ff861a', '#ff902e'],
+    ]) {
+        const button = `${DOCK_BAR} .panel-button.${name}`;
+        out.push(rule(button, `box-shadow: inset 0 0 0 100px ${rest}`));
+        out.push(rule(`${button}:focus, ${button}:hover`, `box-shadow: inset 0 0 0 100px ${hover}`));
+        out.push(rule(`${button}:active, ${button}:checked`, `box-shadow: inset 0 0 0 100px ${active}`));
+    }
 
     // What the class is on: a banner, the volume and brightness popup, and a menu, for what inherits its color.
     out.push(rule(`.message${DRAWN}, .osd-window${DRAWN}, .popup-menu-boxpointer${DRAWN}, .popup-menu-content${DRAWN}`,
