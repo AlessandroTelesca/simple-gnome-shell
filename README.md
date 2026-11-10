@@ -31,7 +31,7 @@ Liquid Glass draws on the same surfaces, so this extension stays idle for as lon
 
 ## Limits
 
-Where only part of a blurred shape is redrawn, the blur reads back some of the last frame there; the shape is redrawn whole on the next frame, so this lasts a frame at most.
+Where only part of a blurred shape is redrawn, the blur uses what was behind it at its last whole redraw, and the shape is redrawn whole on the next frame: a change behind a shape shows in its blur a frame late.
 
 It relies on shell and Dash to Dock internals (`MessageTray._bannerBin`, `OsdWindow._hbox`, `BoxPointer` eases, Dash to Dock's actor names), so an update to either can break it.
 

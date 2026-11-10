@@ -134,6 +134,10 @@ class BlurLayer extends Clutter.Actor {
         this._pieces = [];
         this._fade = 255;
         this._targets = [];
+        // Per framebuffer, a copy of what is below this actor, kept between frames: {target, x, y}.
+        this._caches = new Map();
+        // How far the copy reaches beyond this actor, in its own units.
+        this._padLocal = 0;
         this._mask = null;
         this._pipelines = null;
         this._redrawId = 0;
@@ -165,8 +169,18 @@ class BlurLayer extends Clutter.Actor {
         this.queue_redraw();
     }
 
+    // The allocation and the margin the blur reads from: a change there is in the next redraw's clip, so this paints,
+    // and the whole redraw that follows takes the change in.
     vfunc_get_paint_volume(volume) {
-        return volume.set_from_allocation(this);
+        if (!volume.set_from_allocation(this))
+            return false;
+        const pad = this._padLocal || 2 * Math.max(this._radius, 0) + 4;
+        const origin = new Graphene.Point3D();
+        origin.init(-pad, -pad, 0);
+        volume.set_origin(origin);
+        volume.set_width(this.width + 2 * pad);
+        volume.set_height(this.height + 2 * pad);
+        return true;
     }
 
     vfunc_paint(paintContext) {
@@ -206,16 +220,22 @@ class BlurLayer extends Clutter.Actor {
         const {levels, offset} = blurPlan(radius);
         // How far the blur reaches, which the copy takes in beyond the shape.
         const pad = Math.ceil(offset * 2 ** (levels + 1)) + 2;
+        // The copy's edges sit on a grid of 2^levels framebuffer px, so each halving's texels cover the same screen px
+        // wherever the shape is. Copied from wherever its edge happened to be, a move of 1 px would change what every
+        // texel averages, and the blur would shimmer as the shape moves or resizes.
+        const step = 2 ** levels;
+        this._padLocal = Math.ceil((pad + step) / Math.min(sx, sy)) + 1;
         const fw = fb.get_width(), fh = fb.get_height();
-        const x0 = Math.max(Math.floor(ax) - pad, 0), y0 = Math.max(Math.floor(ay) - pad, 0);
-        const x1 = Math.min(Math.ceil(bx) + pad, fw), y1 = Math.min(Math.ceil(by) + pad, fh);
+        const x0 = Math.max(Math.floor((Math.floor(ax) - pad) / step) * step, 0);
+        const y0 = Math.max(Math.floor((Math.floor(ay) - pad) / step) * step, 0);
+        const x1 = Math.min(Math.ceil((Math.ceil(bx) + pad) / step) * step, fw);
+        const y1 = Math.min(Math.ceil((Math.ceil(by) + pad) / step) * step, fh);
         const cw = x1 - x0, ch = y1 - y0;
         if (cw < 1 || ch < 1)
             return;
 
         const res = resources();
-        const copy = this._target(0).ensure(cw, ch);
-        fb.blit(copy.fb, x0, y0, 0, 0, cw, ch);
+        const copy = this._capture(paintContext, fb, x0, y0, cw, ch, ax, ay, sx, sy);
         const blurred = levels > 0 ? this._blur(copy, levels, offset) : copy;
 
         const mask = this._maskTarget().ensure(Math.max(Math.ceil(w * sx), 1), Math.max(Math.ceil(h * sy), 1));
@@ -229,8 +249,53 @@ class BlurLayer extends Clutter.Actor {
             coords.push(0, 0, (bx - ax) / GRAIN, (by - ay) / GRAIN);
         coords.push(0, 0, 1, 1);
         fb.draw_multitextured_rectangle(p, 0, 0, w, h, coords, coords.length);
+    }
 
-        this._checkClip(paintContext, ax, ay, bx, by, fw, fh, sx, sy);
+    // Copies what is below this actor, framebuffer rect (x0, y0, cw, ch), into a texture. Only a redraw of all of that
+    // rect can be read back: on a partial redraw, what the framebuffer holds even inside the clip is not what a whole
+    // redraw puts there (whatever is drawn above, such as a dock icon that moves, shows through), and blurring it in
+    // made the clip a square that twitched. So each onscreen framebuffer keeps the copy of its last whole redraw. A
+    // partial redraw blurs that copy, which gives what the rest of the screen already shows, and asks for a whole
+    // redraw on the next frame, which takes in whatever changed below.
+    _capture(paintContext, fb, x0, y0, cw, ch, ax, ay, sx, sy) {
+        const clip = paintContext.get_redraw_clip();
+        if (!clip) {
+            // A whole paint, such as a screenshot's: all of it is fresh.
+            const copy = this._target(0).ensure(cw, ch);
+            fb.blit(copy.fb, x0, y0, 0, 0, cw, ch);
+            return copy;
+        }
+        let cache = this._caches.get(fb);
+        if (!cache) {
+            // Framebuffers come and go with monitors: keep a few.
+            if (this._caches.size >= 4)
+                this._caches.delete(this._caches.keys().next().value);
+            cache = {target: new Target(resources().ctx), x: NaN, y: NaN};
+            this._caches.set(fb, cache);
+        }
+        const copy = cache.target;
+        const same = copy.fb && copy.width === cw && copy.height === ch && cache.x === x0 && cache.y === y0;
+        copy.ensure(cw, ch);
+
+        // Whether the clip takes in all of the rect, less a pixel of rounding at each edge.
+        const [stageX, stageY] = this.get_transformed_position();
+        const left = stageX - (ax - x0) / sx, top = stageY - (ay - y0) / sy;
+        const inner = new Mtk.Rectangle({
+            x: Math.ceil(left) + 1, y: Math.ceil(top) + 1,
+            width: Math.floor(cw / sx) - 2, height: Math.floor(ch / sy) - 2,
+        });
+        const whole = inner.width < 1 || inner.height < 1 ||
+            clip.contains_rectangle(inner) === Mtk.RegionOverlap.IN;
+
+        if (whole || !same) {
+            // Moved or resized on a partial redraw, there is no copy to go on: this one has stale pixels in it.
+            fb.blit(copy.fb, x0, y0, 0, 0, cw, ch);
+            cache.x = x0;
+            cache.y = y0;
+        }
+        if (!whole)
+            this._queueWholeRedraw();
+        return copy;
     }
 
     // Halves the copy `levels` times and doubles it back up, through targets of their own: a texture is never drawn
@@ -349,21 +414,8 @@ class BlurLayer extends Clutter.Actor {
         return p;
     }
 
-    // Where only part of this actor is redrawn, the rest of the framebuffer under it still holds the last frame's
-    // blur and tint, and the blur just read some of that back in. A whole redraw on the next frame paints it clean.
-    _checkClip(paintContext, ax, ay, bx, by, fw, fh, sx, sy) {
-        const clip = paintContext.get_redraw_clip();
-        if (!clip || this._redrawId)
-            return;
-        const [stageX, stageY] = this.get_transformed_position();
-        // Only the part of this actor in this framebuffer counts.
-        const left = stageX + (Math.max(ax, 0) - ax) / sx, top = stageY + (Math.max(ay, 0) - ay) / sy;
-        const right = stageX + (Math.min(bx, fw) - ax) / sx, bottom = stageY + (Math.min(by, fh) - ay) / sy;
-        const rect = new Mtk.Rectangle({
-            x: Math.ceil(left) + 1, y: Math.ceil(top) + 1,
-            width: Math.floor(right - left) - 2, height: Math.floor(bottom - top) - 2,
-        });
-        if (rect.width < 1 || rect.height < 1 || clip.contains_rectangle(rect) !== Mtk.RegionOverlap.PART)
+    _queueWholeRedraw() {
+        if (this._redrawId)
             return;
         this._redrawId = GLib.idle_add(GLib.PRIORITY_HIGH, () => {
             this._redrawId = 0;
@@ -396,6 +448,7 @@ class BlurLayer extends Clutter.Actor {
             this._settings.disconnect(id);
         this._settingsIds = [];
         this._targets = [];
+        this._caches.clear();
         this._ups = [];
         this._mask = null;
         this._pipelines = null;
