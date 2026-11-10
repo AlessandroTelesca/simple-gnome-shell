@@ -4,6 +4,7 @@ import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 import {isActorValid} from './frames.js';
 import {BarGrowth} from './growth.js';
 import {EdgeTab} from './tab.js';
+import {topBarsHidden} from './topBar.js';
 
 const TRANSPARENT = 'simple-gnome-shell-transparent';
 // GNOME's slide in, on the banner's bin.
@@ -92,6 +93,8 @@ export class Banners {
         const banner = this._banner;
         if (!isActorValid(banner))
             return;
+        if (topBarsHidden())
+            this._unshift();
         // Grown out of the bar, the bar draws the shape; it runs back in as GNOME slides the banner away.
         const hiding = this._tray._notificationState === MessageTray.State.HIDING;
         if (hiding && this._growth.holding && this._growth.opening)
@@ -113,6 +116,19 @@ export class Banners {
         }
         this._tab.place([x, y, w, h], 'top', monitor, this._tray,
             this._settings.get_double('surface-radius'), opacity);
+    }
+
+    // Hide Top Bar moves banners down by the top bar's height while the bar is not slid away. A bar this extension holds
+    // hidden is not slid away, but it is not there either: the banner goes back to the top of the screen.
+    _unshift() {
+        const bin = this._bin;
+        const ease = bin.get_transition('y');
+        if (ease) {
+            if (ease.get_interval().peek_final_value() > 0)
+                ease.set_to(0);
+        } else if (bin.y > 0) {
+            bin.y = 0;
+        }
     }
 
     destroy() {
