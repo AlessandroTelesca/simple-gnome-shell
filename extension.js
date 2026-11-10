@@ -7,6 +7,7 @@ import {Docks} from './dock.js';
 import {DockBar} from './dockBar.js';
 import {Frames} from './frames.js';
 import {HiddenClocks} from './hiddenClock.js';
+import {Indicators} from './indicators.js';
 import {Labels} from './labels.js';
 import {Menus} from './menus.js';
 import {Osds} from './osd.js';
@@ -58,7 +59,7 @@ export default class SimpleShellExtension extends Extension {
         const settings = this._settings;
         this._frames = new Frames();
         // The bars first, for the menus, banners and popups to grow out of.
-        this._parts = [TopBars, Docks, DockBar, Menus, Labels, Previews, Banners, Osds, HiddenClocks, TextColor].map(Part => new Part(settings, this._frames));
+        this._parts = [TopBars, Docks, DockBar, Menus, Labels, Previews, Banners, Osds, HiddenClocks, TextColor, Indicators].map(Part => new Part(settings, this._frames));
     }
 
     _stop() {

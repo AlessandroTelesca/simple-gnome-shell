@@ -9,6 +9,7 @@ The top bar and [Dash to Dock](https://extensions.gnome.org/extension/307/dash-t
 - **Notifications and the volume and brightness popup:** grow out of the top bar, or out of the screen edge while the bar is hidden.
 - **Blur:** the screen behind each shape is copied, scaled down and back up through a few small offscreens, and drawn back through the shape's outline, with plain Cogl drawing and blend modes: no refraction and no shaders of its own. Three styles: *Smooth* (four taps a pass, gaussian-like), *Fast* (one bilinear tap a pass, cheapest) and *Frosted* (smooth with a fine grain). The tint color and strength are laid over it.
 - **Top bar in the dock:** hides the top bars and puts the top bar's buttons into Dash to Dock, left and right of the apps, in an order set in the preferences, where each of them can also be left out. Their menus grow out of the dock. With docks on several monitors there is one set of buttons: it sits in one dock, the others show copies, and it moves to a dock as the pointer comes onto that dock's buttons. Only on docks along the top or bottom of the screen; without one, the top bar stays. Notifications and the volume and brightness popup then grow out of the top screen edge. Hide Top Bar: Multi Monitors' hidden clock is left as it is.
+- **Control center icons:** each icon on the control center button (network, microphone, power mode, those of other extensions...) can be hidden in the preferences. The control center keeps its entries.
 - **Hidden clock:** the tab of [Hide Top Bar: Multi Monitors](https://github.com/AlessandroTelesca/hidetopbar-multimonitor) takes the same color.
 
 Everything is set in the preferences: the blur, its style and strength, the tint color and strength, the color of the text and icons on it, the radii of the outward-rounded corners and the inward-curved flares, the top bar's height and width, the space above and below the dock's apps, and each of the above on or off.
@@ -22,7 +23,7 @@ gnome-extensions pack --force \
   --extra-source=layout.js --extra-source=shape.js --extra-source=frames.js --extra-source=spring.js \
   --extra-source=growth.js --extra-source=bar.js --extra-source=topBar.js --extra-source=dock.js --extra-source=dockBar.js \
   --extra-source=menus.js --extra-source=tab.js --extra-source=banners.js --extra-source=osd.js \
-  --extra-source=labels.js --extra-source=previews.js --extra-source=hiddenClock.js --extra-source=generatedStyle.js --extra-source=textColor.js --extra-source=blur.js .
+  --extra-source=labels.js --extra-source=previews.js --extra-source=hiddenClock.js --extra-source=indicators.js --extra-source=generatedStyle.js --extra-source=textColor.js --extra-source=blur.js .
 gnome-extensions install --force simple-gnome-shell@alessandrot.shell-extension.zip
 ```
 
@@ -34,7 +35,7 @@ Liquid Glass draws on the same surfaces, so this extension stays idle for as lon
 
 Where only part of a blurred shape is redrawn, the blur uses what was behind it at its last whole redraw, and the shape is redrawn whole on the next frame: a change behind a shape shows in its blur a frame late.
 
-It relies on shell and Dash to Dock internals (`MessageTray._bannerBin`, `OsdWindow._hbox`, `BoxPointer` eases, `Panel.statusArea` and its boxes, Dash to Dock's actor names and its dash's `menu-opened` and `menu-closed` signals), so an update to either can break it.
+It relies on shell and Dash to Dock internals (`MessageTray._bannerBin`, `OsdWindow._hbox`, `BoxPointer` eases, `Panel.statusArea` and its boxes, the control center button's `_indicators` and the fields that hold its icons, Dash to Dock's actor names and its dash's `menu-opened` and `menu-closed` signals), so an update to either can break it.
 
 With the top bar in the dock, Dash to Dock does not count the buttons when it sizes its icons, so with many apps the app list scrolls sooner. The clock is only on screen while the dock is.
 

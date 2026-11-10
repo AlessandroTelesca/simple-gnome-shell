@@ -25,6 +25,8 @@ feature list.
 - `labels.js`: the dock's app name labels. It patches `showLabel` and `hideLabel` on each Dash to Dock item
   container (all of a dock's, hooked when the pointer comes onto the dock) to run them through a `BarGrowth`, and removes the patch on
   destroy. The "Dock menus" setting covers it.
+- `indicators.js`: hides the icons on the control center button listed in `hidden-indicators`. Their owners show
+  them again on every state change, so each hidden icon has a `notify::visible` handler that hides it again.
 - `layout.js`, `shape.js`, `blur.js`, `spring.js`, `frames.js`: geometry, drawing, blur, springs, the per-frame loop.
 - `prefs.js` and `schemas/`: settings. After changing the schema, run `glib-compile-schemas schemas`.
 

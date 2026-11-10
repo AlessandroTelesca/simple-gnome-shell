@@ -272,6 +272,53 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
         watch('top-bar-in-dock', syncInDock);
         syncInDock();
 
+        // The icons by the names of the shell's fields that hold them, in their order on the button.
+        const icons = new Adw.ExpanderRow({
+            title: _('Icons on the control center button'),
+            subtitle: _('An icon turned off is hidden. The control center keeps its entry'),
+        });
+        group(_('Control center')).add(icons);
+        const iconNames = [
+            ['remoteAccess', _('Remote desktop')],
+            ['camera', _('Camera in use')],
+            ['volumeInput', _('Microphone in use')],
+            ['location', _('Location in use')],
+            ['others', _('Icons from other extensions')],
+            ['brightness', _('Brightness')],
+            ['thunderbolt', _('Thunderbolt')],
+            ['nightLight', _('Night light')],
+            ['network', _('Network')],
+            ['darkMode', _('Dark style')],
+            ['doNotDisturb', _('Do not disturb')],
+            ['backlight', _('Keyboard backlight')],
+            ['bluetooth', _('Bluetooth')],
+            ['rfkill', _('Airplane mode')],
+            ['autoRotate', _('Screen rotation')],
+            ['volumeOutput', _('Volume')],
+            ['unsafeMode', _('Unsafe mode')],
+            ['powerProfiles', _('Power mode')],
+            ['system', _('Power and battery')],
+        ];
+        const iconRows = iconNames.map(([name, title]) => {
+            const row = new Adw.SwitchRow({title});
+            row.connect('notify::active', () => {
+                const leftOut = settings.get_strv('hidden-indicators');
+                if (row.active === !leftOut.includes(name))
+                    return;
+                const rest = leftOut.filter(other => other !== name);
+                settings.set_strv('hidden-indicators', row.active ? rest : [...rest, name]);
+            });
+            icons.add_row(row);
+            return [name, row];
+        });
+        const syncIcons = () => {
+            const leftOut = settings.get_strv('hidden-indicators');
+            for (const [name, row] of iconRows)
+                row.active = !leftOut.includes(name);
+        };
+        watch('hidden-indicators', syncIcons);
+        syncIcons();
+
         const dock = group(_('Dash to Dock'));
         toggle(dock, 'dock-enabled', _('Grow out of the screen edge'));
         const spaceNote = _('With Dash to Dock\'s icon size, these set the dock\'s height');
