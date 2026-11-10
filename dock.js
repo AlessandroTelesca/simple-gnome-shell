@@ -16,7 +16,7 @@ const ICON_ROOM = 6;
 // Dash to Dock can rebuild a dock's actors a little after adding its container.
 const RESCAN_MS = 1000;
 
-function findDash(actor) {
+export function findDash(actor) {
     if (actor.get_name() === 'dashtodockDashContainer')
         return actor;
     for (const child of actor.get_children()) {

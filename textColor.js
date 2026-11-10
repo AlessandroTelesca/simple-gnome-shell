@@ -59,6 +59,7 @@ const ACCENT = [
     '.quick-toggle-menu-button:checked', '.quick-toggle-menu .header .icon.active',
 ];
 const PANEL = `#panel${DRAWN}`;
+const DOCK_BAR = '.simple-gnome-shell-dock-bar';
 
 function css(color) {
     const [r, g, b] = [1, 3, 5].map(i => parseInt(color.slice(i, i + 2), 16));
@@ -102,6 +103,20 @@ function css(color) {
         `background-color: ${shade(0.12)}`));
     out.push(rule(`${inside(['.dock-tray .panel-button:active .panel-status-indicators-box'])}, ` +
         inside(['.dock-tray .panel-button:checked .panel-status-indicators-box']), `background-color: ${shade(0.22)}`));
+
+    // The top bar's buttons in the dock, whose highlight the theme draws as an inset shadow.
+    out.push(rule(`${DOCK_BAR} .panel-button`, `color: ${shade(1)}`));
+    out.push(rule(`${DOCK_BAR} .panel-button#panelActivities .workspace-dot`, `background-color: ${shade(1)}`));
+    out.push(rule(`${DOCK_BAR} .panel-button:focus, ${DOCK_BAR} .panel-button:hover`,
+        `box-shadow: inset 0 0 0 100px ${shade(0.17)}`));
+    out.push(rule(`${DOCK_BAR} .panel-button:active, ${DOCK_BAR} .panel-button:checked`,
+        `box-shadow: inset 0 0 0 100px ${shade(0.28)}`));
+    const clock = `${DOCK_BAR} .panel-button.clock-display`;
+    out.push(rule(`${clock}, ${clock}:focus, ${clock}:hover, ${clock}:active, ${clock}:checked`, 'box-shadow: none'));
+    out.push(rule(`${clock}:focus .clock, ${clock}:hover .clock`, `box-shadow: inset 0 0 0 100px ${shade(0.17)}`));
+    out.push(rule(`${clock}:active .clock, ${clock}:checked .clock`, `box-shadow: inset 0 0 0 100px ${shade(0.28)}`));
+    out.push(rule(`${DOCK_BAR} .panel-button.screen-recording-indicator, ${DOCK_BAR} .panel-button.screen-sharing-indicator`,
+        'color: #fafafb'));
 
     // What the class is on: a banner, the volume and brightness popup, and a menu, for what inherits its color.
     out.push(rule(`.message${DRAWN}, .osd-window${DRAWN}, .popup-menu-boxpointer${DRAWN}, .popup-menu-content${DRAWN}`,

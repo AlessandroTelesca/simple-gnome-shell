@@ -149,6 +149,8 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
         syncBlurStyle();
         syncBlur();
 
+        // Before the top bar's own group, which it turns off.
+        const inDock = group(_('Top bar in the dock'));
         const bar = group(_('Top bar'));
         toggle(bar, 'top-bar-enabled', _('Grow out of the screen edge'));
         const styles = ['center', 'pill'];
@@ -183,6 +185,78 @@ export default class SimpleShellPreferences extends ExtensionPreferences {
         number(bar, 'top-bar-padding', _('Room beside the buttons'), 0, 64, 1);
         radius(bar, 'top-bar-radius', _('Outward-rounded corners, radius'));
         radius(bar, 'top-bar-flare', _('Inward-curved flares, radius'));
+
+        toggle(inDock, 'top-bar-in-dock', _('Hide the top bar and put its buttons in Dash to Dock'),
+            _('On docks along the top or bottom of the screen'));
+        // The buttons by their names in the top bar. Others, from extensions, show under that name.
+        const APPS = 'apps';
+        const buttonNames = {
+            activities: _('Desktops'),
+            dateMenu: _('Clock and notification center'),
+            quickSettings: _('Control center'),
+            'media-controls': _('Media player'),
+            keyboard: _('Keyboard layout'),
+            a11y: _('Accessibility'),
+            dwellClick: _('Click assist'),
+            screenRecording: _('Screen recording'),
+            screenSharing: _('Screen sharing'),
+        };
+        const orderRows = [];
+        const resetOrder = new Gtk.Button({
+            icon_name: 'edit-undo-symbolic',
+            tooltip_text: _('Reset the order'),
+            valign: Gtk.Align.CENTER,
+            css_classes: ['flat', 'circular'],
+        });
+        resetOrder.connect('clicked', () => settings.reset('dock-bar-order'));
+        const orderHead = new Adw.ActionRow({
+            title: _('Order, from left to right'),
+            subtitle: _('Buttons the top bar gets later are added next to the apps'),
+        });
+        orderHead.add_suffix(resetOrder);
+        inDock.add(orderHead);
+        const syncOrder = () => {
+            for (const row of orderRows.splice(0))
+                inDock.remove(row);
+            const saved = settings.get_strv('dock-bar-order');
+            const order = saved.includes(APPS) ? saved : [...saved, APPS];
+            const move = (from, to) => {
+                const next = [...order];
+                next.splice(to, 0, ...next.splice(from, 1));
+                settings.set_strv('dock-bar-order', next);
+            };
+            order.forEach((name, i) => {
+                const apps = name === APPS;
+                const row = new Adw.ActionRow({
+                    title: apps ? _('The dock\'s apps') : buttonNames[name] ?? name,
+                    subtitle: apps ? _('What is above goes left of them, what is below right') : '',
+                });
+                if (apps)
+                    row.add_prefix(new Gtk.Image({icon_name: 'view-app-grid-symbolic'}));
+                for (const [icon, tip, to] of [['go-up-symbolic', _('Move left'), i - 1], ['go-down-symbolic', _('Move right'), i + 1]]) {
+                    const button = new Gtk.Button({
+                        icon_name: icon,
+                        tooltip_text: tip,
+                        valign: Gtk.Align.CENTER,
+                        css_classes: ['flat', 'circular'],
+                        sensitive: to >= 0 && to < order.length,
+                    });
+                    button.connect('clicked', () => move(i, to));
+                    row.add_suffix(button);
+                }
+                inDock.add(row);
+                orderRows.push(row);
+            });
+            resetOrder.sensitive = !settings.get_value('dock-bar-order').equal(settings.get_default_value('dock-bar-order'));
+        };
+        watch('dock-bar-order', syncOrder);
+        syncOrder();
+        // The top bar's own look has nothing to show while it is hidden.
+        const syncInDock = () => {
+            bar.sensitive = !settings.get_boolean('top-bar-in-dock');
+        };
+        watch('top-bar-in-dock', syncInDock);
+        syncInDock();
 
         const dock = group(_('Dash to Dock'));
         toggle(dock, 'dock-enabled', _('Grow out of the screen edge'));

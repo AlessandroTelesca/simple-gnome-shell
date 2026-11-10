@@ -16,6 +16,12 @@ feature list.
   installed `windowPreview.js`, so it is the same module instance. It opens without a `PopupMenuManager` (no grab) and
   without `popup()` (no keyboard focus). It patches `shouldShowTooltip` on each app icon to hide the name label, and
   removes the patch on destroy. Being a `PopupMenu`, the growth comes from `menus.js`.
+- `dockBar.js` (`DockBar`): the "top bar in the dock" mode. It moves the containers of `Main.panel.statusArea`'s buttons
+  into two boxes it adds to each horizontal dock's `dashtodockDashContainer`, and puts them back when the dock goes
+  (Dash to Dock rebuilds its docks), the mode is turned off or the extension stops. It patches `open` on the buttons'
+  menus to tell the dash before a menu opens, and removes the patch when a button goes back. `setTopBarsHidden()` in
+  `topBar.js` holds the top bars' boxes hidden meanwhile. The theme's `#panel .panel-button` rules are given again
+  for `.simple-gnome-shell-dock-bar` in `stylesheet.css`.
 - `labels.js`: the dock's app name labels. It patches `showLabel` and `hideLabel` on each Dash to Dock item
   container (all of a dock's, hooked when the pointer comes onto the dock) to run them through a `BarGrowth`, and removes the patch on
   destroy. The "Dock menus" setting covers it.

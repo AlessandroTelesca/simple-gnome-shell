@@ -85,6 +85,17 @@
       <summary>Radius of the inward-curved flares at the screen edge (px)</summary>
     </key>
 
+    <key name="top-bar-in-dock" type="b">
+      <default>false</default>
+      <summary>Hide the top bar and put its buttons in Dash to Dock</summary>
+      <description>On docks along the top or bottom of the screen. Without one, the top bar stays.</description>
+    </key>
+    <key name="dock-bar-order" type="as">
+      <default>['media-controls', 'activities', 'apps', 'quickSettings', 'dateMenu']</default>
+      <summary>The order of the top bar's buttons in the dock</summary>
+      <description>The buttons' names in the top bar, from left to right. Those before "apps" go left of the dock's apps, the others right of them. Buttons not listed yet are added next to the apps.</description>
+    </key>
+
     <key name="dock-enabled" type="b">
       <default>true</default>
       <summary>Dash to Dock grows out of the screen edge</summary>

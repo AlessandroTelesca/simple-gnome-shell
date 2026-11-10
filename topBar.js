@@ -27,6 +27,23 @@ function withoutPanelStyle(style) {
     return (style ?? '').replace(OWN_PANEL_STYLE, '').trim().replace(/;$/, '');
 }
 
+// While the top bar's buttons are in the dock (dockBar.js), the top bars are held hidden and have no shape.
+let hidden = false;
+let topBars = null;
+
+/** Hides every top bar along the top or bottom of a monitor, or lets them show again. */
+export function setTopBarsHidden(value) {
+    if (hidden === value)
+        return;
+    hidden = value;
+    topBars?.rescan();
+}
+
+/** Whether the top bars are held hidden now. */
+export function topBarsHidden() {
+    return hidden;
+}
+
 /** The shape behind one top bar. */
 class TopBar extends EdgeBar {
     constructor(settings, frames, panel, panelBox, main) {
@@ -249,7 +266,9 @@ export class TopBars {
         this._frames = frames;
         this._bars = new Map();
         this._watched = new Map();
+        this._held = new Map();
         this._idleId = 0;
+        topBars = this;
         const uiGroup = Main.layoutManager.uiGroup;
         const scan = () => this._schedule();
         this._disconnects = ['child-added', 'child-removed'].map(signal => {
@@ -277,10 +296,15 @@ export class TopBars {
         });
     }
 
+    rescan() {
+        this._scan();
+    }
+
     _scan() {
         const wanted = new Map();
         const present = new Set();
-        const enabled = this._settings.get_boolean('top-bar-enabled');
+        const boxes = new Set();
+        const enabled = this._settings.get_boolean('top-bar-enabled') && !hidden;
         for (const box of Main.layoutManager.uiGroup.get_children()) {
             if (!(box instanceof St.Widget))
                 continue;
@@ -289,9 +313,16 @@ export class TopBars {
                     continue;
                 present.add(child);
                 // Bars along a side of the screen are left alone. Multi Monitors Bar marks them.
-                if (enabled && !child.has_style_class_name('multimonitor-panel-vertical'))
+                if (child.has_style_class_name('multimonitor-panel-vertical'))
+                    continue;
+                boxes.add(box);
+                if (enabled)
                     wanted.set(child, box);
             }
+        }
+        for (const box of [...this._held.keys()]) {
+            if (!hidden || !boxes.has(box))
+                this._release(box);
         }
         for (const panel of [...this._bars.keys()]) {
             if (!wanted.has(panel))
@@ -315,6 +346,31 @@ export class TopBars {
                 logError(e, '[Simple GNOME Shell] could not attach to a top bar');
             }
         }
+        // After the shapes are gone, which restore the bars' own styles.
+        if (hidden) {
+            for (const box of boxes)
+                this._hold(box);
+        }
+    }
+
+    // The shell shows the bar's box again after a fullscreen window, and Hide Top Bar on edge pressure.
+    _hold(box) {
+        if (this._held.has(box))
+            return;
+        this._held.set(box, box.connect('notify::visible', () => {
+            if (box.visible)
+                box.hide();
+        }));
+        box.hide();
+    }
+
+    _release(box) {
+        const id = this._held.get(box);
+        this._held.delete(box);
+        if (!isActorValid(box))
+            return;
+        box.disconnect(id);
+        box.show();
     }
 
     _watch(panel) {
@@ -351,5 +407,9 @@ export class TopBars {
         this._disconnects = [];
         for (const panel of [...this._watched.keys()])
             this._unwatch(panel);
+        for (const box of [...this._held.keys()])
+            this._release(box);
+        hidden = false;
+        topBars = null;
     }
 }

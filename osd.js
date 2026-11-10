@@ -4,6 +4,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {isActorValid} from './frames.js';
 import {BarGrowth, topBarOnMonitor} from './growth.js';
+import {topBarsHidden} from './topBar.js';
 import {EdgeTab} from './tab.js';
 
 const TRANSPARENT = 'simple-gnome-shell-transparent';
@@ -57,10 +58,10 @@ class OsdPopup {
     }
 
     // Moves the popup from GNOME's place at the bottom to under the bar's system indicators, or to the top of the
-    // screen while the bar is hidden. The window moves, not the popup's box, whose translation the growth slides.
-    _place(bar) {
+    // screen while the bar is hidden or its buttons are in the dock. The window moves, not the popup's box, whose
+    // translation the growth slides.
+    _place(bar, atTop) {
         const win = this._win, box = this._box;
-        const atTop = !!bar;
         if (atTop !== this._atTop) {
             this._atTop = atTop;
             win.y_align = atTop ? Clutter.ActorAlign.START : Clutter.ActorAlign.END;
@@ -72,12 +73,12 @@ class OsdPopup {
                 box.remove_style_class_name(TRANSPARENT);
         }
         this._barShown = false;
-        if (!bar || !win.visible)
+        if (!atTop || !win.visible)
             return;
         const monitor = Main.layoutManager.monitors[win._monitorIndex];
         if (!monitor)
             return;
-        const indicators = bar.button('quickSettings');
+        const indicators = bar?.button('quickSettings');
         this._barShown = !!indicators && bar.growsFrom(indicators, 'osd');
         const top = (this._barShown ? bar.glassEdge() : monitor.y) + BAR_GAP;
         let center = monitor.x + monitor.width / 2;
@@ -119,7 +120,7 @@ class OsdPopup {
             return;
         const wanted = this._settings.get_boolean('osd-grow');
         const bar = wanted ? topBarOnMonitor(win._monitorIndex) : null;
-        this._place(bar);
+        this._place(bar, wanted && (!!bar || topBarsHidden()));
         if (bar && this._syncGrowth()) {
             this._tab.hide();
             return;

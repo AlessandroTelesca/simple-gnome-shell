@@ -101,11 +101,20 @@ class MenuGrowth {
         const [, y] = box.get_transformed_position();
         if (!monitor || !Number.isFinite(y))
             return;
-        // Where it rests, whatever the open animation has it at now.
-        const top = y - box.translation_y - this._menu.actor.translation_y;
+        const wanted = this._settings.get_int('notification-center-max-height');
         const dockTop = monitor.y + monitor.height - bottomDockThickness(index);
-        this._limit = dockTop - DOCK_GAP;
-        const height = cappedHeight(this._settings.get_int('notification-center-max-height'), top, dockTop, DOCK_GAP);
+        const button = buttonRect(source);
+        let height;
+        if (button && button[1] + button[3] / 2 > monitor.y + monitor.height / 2) {
+            // Opened from a button in the dock, it ends above the dock and has the room up to the monitor's top.
+            this._limit = null;
+            height = cappedHeight(wanted, monitor.y + DOCK_GAP, Math.min(button[1], dockTop), DOCK_GAP);
+        } else {
+            // Where it rests, whatever the open animation has it at now.
+            const top = y - box.translation_y - this._menu.actor.translation_y;
+            this._limit = dockTop - DOCK_GAP;
+            height = cappedHeight(wanted, top, dockTop, DOCK_GAP);
+        }
         // max-height leaves out the padding and is in the theme's units.
         const node = box.get_theme_node();
         const extra = node.get_vertical_padding() + node.get_border_width(St.Side.TOP) + node.get_border_width(St.Side.BOTTOM);
